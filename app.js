@@ -140,13 +140,11 @@ function updatePitcherStats() {
     const pitchers = getActivePitchers(currentInning);
     const players = [pitchers.redP1, pitchers.redP2, pitchers.blueP1, pitchers.blueP2];
 
-    // Initialize stats object for all four selected players
     let statsMap = {};
     players.forEach(p => {
         statsMap[p] = { board: 0, hole: 0, pts: 0 };
     });
 
-    // Accumulate total statistics per player
     inningsHistory.forEach(item => {
         if (statsMap[item.redPitcher]) {
             statsMap[item.redPitcher].board += item.rB;
@@ -160,13 +158,11 @@ function updatePitcherStats() {
         }
     });
 
-    // Helper function to update each player box
     const setBox = (nameId, lineId, boxId, playerName, activeName) => {
         document.getElementById(nameId).innerText = playerName;
         const s = statsMap[playerName] || { pts: 0, board: 0, hole: 0 };
         document.getElementById(lineId).innerText = `${s.pts} pts (${s.board}B / ${s.hole}H)`;
 
-        // Highlight active pitcher for current inning
         const boxElem = document.getElementById(boxId);
         if (playerName === activeName) {
             boxElem.classList.add('active-pitcher');
@@ -293,18 +289,53 @@ function recalculateGame() {
         let rPts = (item.rB * 1) + (item.rH * 3);
         let bPts = (item.bB * 1) + (item.bH * 3);
 
-        totalRed += (rPts > bPts ? rPts - bPts : 0);
-        totalBlue += (bPts > rPts ? bPts - rPts : 0);
+        let innDiff = rPts - bPts;
+        let innScoreText = "0";
+        let innScoreClass = "inn-score-tie";
+
+        if (innDiff > 0) {
+            totalRed += innDiff;
+            innScoreText = `+${innDiff}`;
+            innScoreClass = "inn-score-red";
+        } else if (innDiff < 0) {
+            totalBlue += Math.abs(innDiff);
+            innScoreText = `+${Math.abs(innDiff)}`;
+            innScoreClass = "inn-score-blue";
+        }
 
         let row = logBody.insertRow(0);
         row.className = "clickable-row";
         row.onclick = () => openEditModal(index);
 
+        // Column 0: Inning Number
         row.insertCell(0).innerText = item.inn;
-        row.insertCell(1).innerText = `${item.redPitcher} (${rPts} pts)`;
-        row.insertCell(2).innerText = `${item.bluePitcher} (${bPts} pts)`;
-        row.insertCell(3).innerText = `${rPts} - ${bPts}`;
-        row.insertCell(4).innerHTML = `<span class="edit-action-link">Edit</span>`;
+
+        // Column 1: Red Pitcher Name (No Parentheses)
+        row.insertCell(1).innerText = item.redPitcher;
+
+        // Column 2: Red Points (Color Coded)
+        let redPtsCell = row.insertCell(2);
+        redPtsCell.innerText = rPts;
+        redPtsCell.className = "red-pts-cell";
+
+        // Column 3: Blue Pitcher Name (No Parentheses)
+        row.insertCell(3).innerText = item.bluePitcher;
+
+        // Column 4: Blue Points (Color Coded)
+        let bluePtsCell = row.insertCell(4);
+        bluePtsCell.innerText = bPts;
+        bluePtsCell.className = "blue-pts-cell";
+
+        // Column 5: Inning Score (+Net Points colored by winning team or black for tie)
+        let innScoreCell = row.insertCell(5);
+        innScoreCell.innerText = innScoreText;
+        innScoreCell.className = `inn-score-cell ${innScoreClass}`;
+
+        // Column 6: Running Matchup Score
+        row.insertCell(6).innerText = `${totalRed} - ${totalBlue}`;
+
+        // Column 7: Action Link
+        row.insertCell(7).innerHTML = `<span class="edit-action-link">Edit</span>`;
     });
 
     document.getElementById('red-total').innerText = totalRed;
