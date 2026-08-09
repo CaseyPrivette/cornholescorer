@@ -383,6 +383,10 @@ th { background: #eee; }
 .inn-score-blue { color: #0275d8; }
 .inn-score-tie { color: #000000; }
 
+.match-score-cell { font-weight: 800; font-size: 14px; }
+.match-score-red { color: #d9534f; }
+.match-score-blue { color: #0275d8; }
+
 tr.clickable-row { cursor: pointer; }
 tr.clickable-row:hover { background-color: #f1f1f1; }
 

@@ -310,7 +310,7 @@ function recalculateGame() {
         // Column 0: Inning Number
         row.insertCell(0).innerText = item.inn;
 
-        // Column 1: Red Pitcher Name (No Parentheses)
+        // Column 1: Red Pitcher Name
         row.insertCell(1).innerText = item.redPitcher;
 
         // Column 2: Red Points (Color Coded)
@@ -318,7 +318,7 @@ function recalculateGame() {
         redPtsCell.innerText = rPts;
         redPtsCell.className = "red-pts-cell";
 
-        // Column 3: Blue Pitcher Name (No Parentheses)
+        // Column 3: Blue Pitcher Name
         row.insertCell(3).innerText = item.bluePitcher;
 
         // Column 4: Blue Points (Color Coded)
@@ -331,8 +331,10 @@ function recalculateGame() {
         innScoreCell.innerText = innScoreText;
         innScoreCell.className = `inn-score-cell ${innScoreClass}`;
 
-        // Column 6: Running Matchup Score
-        row.insertCell(6).innerText = `${totalRed} - ${totalBlue}`;
+        // Column 6: Running Match Score (Numbers color-coded by team)
+        let matchScoreCell = row.insertCell(6);
+        matchScoreCell.className = "match-score-cell";
+        matchScoreCell.innerHTML = `<span class="match-score-red">${totalRed}</span> - <span class="match-score-blue">${totalBlue}</span>`;
 
         // Column 7: Action Link
         row.insertCell(7).innerHTML = `<span class="edit-action-link">Edit</span>`;
