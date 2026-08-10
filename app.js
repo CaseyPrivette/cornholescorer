@@ -46,7 +46,6 @@ function initGame() {
 function handlePracticeModeToggle() {
     const isPractice = document.getElementById('practiceToggle').checked;
 
-    // UI elements to adjust
     const setupGrid = document.getElementById('setup-grid');
     const matchupBox2 = document.getElementById('matchup-box-2');
     const blueP1Group = document.getElementById('blue-p1-group');
@@ -326,6 +325,21 @@ function renderSelectors(team, stateObj, boardContainerId, holeContainerId) {
     }
 }
 
+function getPlayerCumulativeScore(playerName, targetInning) {
+    let total = 0;
+    inningsHistory.forEach(item => {
+        if (item.inn <= targetInning) {
+            if (item.redPitcher === playerName) {
+                total += (item.rB * 1) + (item.rH * 3);
+            }
+            if (item.bluePitcher === playerName) {
+                total += (item.bB * 1) + (item.bH * 3);
+            }
+        }
+    });
+    return total;
+}
+
 function getRunningTotalsUpTo(targetInning) {
     const isPractice = document.getElementById('practiceToggle').checked;
     let redTotal = 0;
@@ -371,16 +385,12 @@ function calculateInning() {
         bluePitcher: pitchers.blueActive
     });
 
-    const totals = getRunningTotalsUpTo(currentInning);
-
     if (isLogging) {
         logInningToSheets(
             currentInning, 
             pitchers.redActive, 
             pitchers.blueActive, 
             rB, rH, bB, bH, 
-            totals.redTotal, 
-            totals.blueTotal, 
             isPractice
         );
     }
@@ -537,7 +547,6 @@ function saveInningEdit() {
     if (isLogging) {
         for (let i = editingInningIndex; i < inningsHistory.length; i++) {
             let currentItem = inningsHistory[i];
-            let totals = getRunningTotalsUpTo(currentItem.inn);
             logInningToSheets(
                 currentItem.inn, 
                 currentItem.redPitcher, 
@@ -546,8 +555,6 @@ function saveInningEdit() {
                 currentItem.rH, 
                 currentItem.bB, 
                 currentItem.bH, 
-                totals.redTotal, 
-                totals.blueTotal, 
                 isPractice
             );
         }
@@ -556,7 +563,7 @@ function saveInningEdit() {
     closeEditModal();
 }
 
-function logInningToSheets(innNum, redName, blueName, redB, redH, blueB, blueH, redRunningTotal, blueRunningTotal, isPractice = false) {
+function logInningToSheets(innNum, redName, blueName, redB, redH, blueB, blueH, isPractice = false) {
     const redPts = (redB * 1) + (redH * 3);
     const bluePts = (blueB * 1) + (blueH * 3);
 
@@ -568,6 +575,9 @@ function logInningToSheets(innNum, redName, blueName, redB, redH, blueB, blueH, 
     ];
 
     playersToLog.forEach(p => {
+        const playerRunningTotal = getPlayerCumulativeScore(p.name, innNum);
+        const missedBoard = 4 - (p.board + p.hole);
+
         const payload = {
             gameNumber: gameNumber,
             inningNumber: innNum,
@@ -575,9 +585,9 @@ function logInningToSheets(innNum, redName, blueName, redB, redH, blueB, blueH, 
             playerColor: p.color,
             boardCount: p.board,
             holeCount: p.hole,
+            missedBoard: missedBoard,
             pointsScored: p.pts,
-            redRunningTotal: redRunningTotal,
-            blueRunningTotal: blueRunningTotal,
+            playerRunningTotal: playerRunningTotal,
             isPractice: isPractice
         };
 
