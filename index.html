@@ -17,26 +17,44 @@
     <h1>Cornhole Scorer</h1>
     <div class="game-info">Game #<span id="display-game-num">1</span> | Inning: <span id="display-inn-num">1</span></div>
 
+    <!-- Global Toggles Bar -->
+    <div class="toggle-container">
+        <div class="toggle-bar">
+            <span class="toggle-label">PRACTICE MODE</span>
+            <label class="switch">
+                <input type="checkbox" id="practiceToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-bar">
+            <span class="toggle-label">LIVE GOOGLE SHEETS LOGGING</span>
+            <label class="switch">
+                <input type="checkbox" id="loggingToggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
     <div class="settings-card">
         <div class="settings-header">
             <h3>Player Setup</h3>
             <button class="btn-add-player-link" id="btnAddPlayer">+ Add New Player</button>
         </div>
         
-        <div class="player-setup-grid">
-            <div class="matchup-box">
-                <div class="matchup-title">1st Inning Matchup</div>
+        <div class="player-setup-grid" id="setup-grid">
+            <div class="matchup-box" id="matchup-box-1">
+                <div class="matchup-title" id="matchup-title-1">1st Inning Matchup</div>
                 <div class="input-group red-row">
-                    <label>Red Player 1</label>
+                    <label id="label-red-p1">Red Player 1</label>
                     <select id="redP1Select"></select>
                 </div>
-                <div class="input-group blue-row">
+                <div class="input-group blue-row" id="blue-p1-group">
                     <label>Blue Player 1</label>
                     <select id="blueP1Select"></select>
                 </div>
             </div>
 
-            <div class="matchup-box">
+            <div class="matchup-box" id="matchup-box-2">
                 <div class="matchup-title">2nd Inning Matchup</div>
                 <div class="input-group red-row">
                     <label>Red Player 2</label>
@@ -49,27 +67,19 @@
             </div>
         </div>
     </div>
-
-    <div class="toggle-bar">
-        <span class="toggle-label">LIVE GOOGLE SHEETS LOGGING</span>
-        <label class="switch">
-            <input type="checkbox" id="loggingToggle" checked>
-            <span class="slider"></span>
-        </label>
-    </div>
     
-    <div class="scoreboard">
-        <div class="score-box red-score">
-            <span class="score-label">RED</span>
+    <div class="scoreboard" id="scoreboard">
+        <div class="score-box red-score" id="red-score-box">
+            <span class="score-label" id="red-score-label">RED</span>
             <span class="score-num" id="red-total">0</span>
         </div>
-        <div class="score-box blue-score">
+        <div class="score-box blue-score" id="blue-score-box">
             <span class="score-label">BLUE</span>
             <span class="score-num" id="blue-total">0</span>
         </div>
     </div>
 
-    <div class="team-section red-team">
+    <div class="team-section red-team" id="red-team-section">
         <strong class="pitcher-title" id="red-pitcher-label">RED PITCHER</strong>
         <div class="field-group">
             <div class="field-label">Board (1 pt)</div>
@@ -81,7 +91,7 @@
         </div>
     </div>
 
-    <div class="team-section blue-team">
+    <div class="team-section blue-team" id="blue-team-section">
         <strong class="pitcher-title" id="blue-pitcher-label">BLUE PITCHER</strong>
         <div class="field-group">
             <div class="field-label">Board (1 pt)</div>
@@ -96,12 +106,12 @@
     <button class="submit-btn" id="btnEndInning">End Inning</button>
 
     <!-- 4-Player Stats Section -->
-    <div class="pitcher-stats-card">
+    <div class="pitcher-stats-card" id="stats-card">
         <div class="stats-card-title">Game Statistics</div>
-        <div class="stats-grid">
+        <div class="stats-grid" id="stats-grid">
             <!-- Red Team Column -->
-            <div class="stat-team-column">
-                <div class="stat-team-header red-header-text">Red Team</div>
+            <div class="stat-team-column" id="red-stat-col">
+                <div class="stat-team-header red-header-text" id="red-stat-header">Red Team</div>
                 <div class="stat-player-box red-stat" id="box-red-p1">
                     <div class="stat-pitcher-name" id="stat-red1-name">Red Player 1</div>
                     <div class="stat-line" id="stat-red1-line">0 pts (0 B / 0 H)</div>
@@ -113,7 +123,7 @@
             </div>
 
             <!-- Blue Team Column -->
-            <div class="stat-team-column">
+            <div class="stat-team-column" id="blue-stat-col">
                 <div class="stat-team-header blue-header-text">Blue Team</div>
                 <div class="stat-player-box blue-stat" id="box-blue-p1">
                     <div class="stat-pitcher-name" id="stat-blue1-name">Blue Player 1</div>
@@ -130,14 +140,14 @@
     <div class="log-container">
         <table id="log">
             <thead>
-                <tr>
+                <tr id="log-header-row">
                     <th>Inn</th>
-                    <th class="red-header">Red Pitcher</th>
-                    <th class="red-header">Pts</th>
-                    <th class="blue-header">Blue Pitcher</th>
-                    <th class="blue-header">Pts</th>
-                    <th>Inning Score</th>
-                    <th>Match Score</th>
+                    <th class="red-header" id="th-red-p">Red Pitcher</th>
+                    <th class="red-header" id="th-red-pts">Pts</th>
+                    <th class="blue-header" id="th-blue-p">Blue Pitcher</th>
+                    <th class="blue-header" id="th-blue-pts">Pts</th>
+                    <th id="th-inn-score">Inning Score</th>
+                    <th id="th-match-score">Match Score</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -151,7 +161,7 @@
         <div class="modal-content">
             <div class="modal-header">Edit Inning <span id="edit-inn-num">1</span></div>
             
-            <div class="modal-team red-team">
+            <div class="modal-team red-team" id="modal-red-team">
                 <strong class="pitcher-title modal-pitcher-title" id="modal-red-pitcher-label">RED PITCHER</strong>
                 <div class="field-group">
                     <div class="field-label">Board (1 pt)</div>
@@ -163,7 +173,7 @@
                 </div>
             </div>
 
-            <div class="modal-team blue-team">
+            <div class="modal-team blue-team" id="modal-blue-team">
                 <strong class="pitcher-title modal-pitcher-title" id="modal-blue-pitcher-label">BLUE PITCHER</strong>
                 <div class="field-group">
                     <div class="field-label">Board (1 pt)</div>

@@ -61,6 +61,10 @@ h1 {
     margin-bottom: 12px; 
 }
 
+.player-setup-grid.practice-mode {
+    grid-template-columns: 1fr;
+}
+
 .matchup-box { 
     background: #f8f9fa; 
     border: 2px solid #e9ecef; 
@@ -108,21 +112,28 @@ h1 {
     color: #333; 
 }
 
+.toggle-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
 .toggle-bar { 
+    flex: 1;
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
     background: #fff; 
     padding: 10px 15px; 
     border-radius: 8px; 
-    margin-bottom: 15px; 
     box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
 }
 
 .toggle-label {
-    font-size: 13px; 
+    font-size: 12px; 
     font-weight: bold; 
     color: #555;
+    text-transform: uppercase;
 }
 
 .switch { 
@@ -294,6 +305,10 @@ input:checked + .slider:before { transform: translateX(20px); }
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+}
+
+.stats-grid.practice-mode {
+    grid-template-columns: 1fr;
 }
 
 .stat-team-column {

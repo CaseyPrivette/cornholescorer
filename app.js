@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('btnEndInning').addEventListener('click', calculateInning);
     document.getElementById('btnCancelEdit').addEventListener('click', closeEditModal);
     document.getElementById('btnSaveEdit').addEventListener('click', saveInningEdit);
+    document.getElementById('practiceToggle').addEventListener('change', handlePracticeModeToggle);
 
     ['redP1Select', 'blueP1Select', 'redP2Select', 'blueP2Select'].forEach(id => {
         document.getElementById(id).addEventListener('change', updateMatchupBanner);
@@ -40,6 +41,84 @@ function initGame() {
     fetchRosterFromSheets();
     renderSelectors('red', activeScores, 'red-board-boxes', 'red-hole-boxes');
     renderSelectors('blue', activeScores, 'blue-board-boxes', 'blue-hole-boxes');
+}
+
+function handlePracticeModeToggle() {
+    const isPractice = document.getElementById('practiceToggle').checked;
+
+    // UI elements to adjust
+    const setupGrid = document.getElementById('setup-grid');
+    const matchupBox2 = document.getElementById('matchup-box-2');
+    const blueP1Group = document.getElementById('blue-p1-group');
+    const labelRedP1 = document.getElementById('label-red-p1');
+    const matchupTitle1 = document.getElementById('matchup-title-1');
+    
+    const blueScoreBox = document.getElementById('blue-score-box');
+    const redScoreLabel = document.getElementById('red-score-label');
+    const blueTeamSection = document.getElementById('blue-team-section');
+    
+    const statsGrid = document.getElementById('stats-grid');
+    const blueStatCol = document.getElementById('blue-stat-col');
+    const boxRedP2 = document.getElementById('box-red-p2');
+    const redStatHeader = document.getElementById('red-stat-header');
+
+    const thBlueP = document.getElementById('th-blue-p');
+    const thBluePts = document.getElementById('th-blue-pts');
+    const thInnScore = document.getElementById('th-inn-score');
+    const thMatchScore = document.getElementById('th-match-score');
+
+    const modalBlueTeam = document.getElementById('modal-blue-team');
+
+    if (isPractice) {
+        setupGrid.classList.add('practice-mode');
+        matchupBox2.style.display = 'none';
+        blueP1Group.style.display = 'none';
+        labelRedP1.innerText = "Player Name";
+        matchupTitle1.innerText = "Practice Player";
+
+        blueScoreBox.style.display = 'none';
+        redScoreLabel.innerText = "PRACTICE SCORE";
+
+        blueTeamSection.style.display = 'none';
+
+        statsGrid.classList.add('practice-mode');
+        blueStatCol.style.display = 'none';
+        boxRedP2.style.display = 'none';
+        redStatHeader.innerText = "Player Stats";
+
+        thBlueP.style.display = 'none';
+        thBluePts.style.display = 'none';
+        thInnScore.style.display = 'none';
+        thMatchScore.innerText = "Total Score";
+
+        modalBlueTeam.style.display = 'none';
+    } else {
+        setupGrid.classList.remove('practice-mode');
+        matchupBox2.style.display = 'block';
+        blueP1Group.style.display = 'block';
+        labelRedP1.innerText = "Red Player 1";
+        matchupTitle1.innerText = "1st Inning Matchup";
+
+        blueScoreBox.style.display = 'flex';
+        redScoreLabel.innerText = "RED";
+
+        blueTeamSection.style.display = 'block';
+
+        statsGrid.classList.remove('practice-mode');
+        blueStatCol.style.display = 'flex';
+        boxRedP2.style.display = 'block';
+        redStatHeader.innerText = "Red Team";
+
+        thBlueP.style.display = '';
+        thBluePts.style.display = '';
+        thInnScore.style.display = '';
+        thMatchScore.innerText = "Match Score";
+
+        modalBlueTeam.style.display = 'block';
+    }
+
+    updateMatchupBanner();
+    recalculateGame();
 }
 
 function fetchRosterFromSheets() {
@@ -111,10 +190,22 @@ function submitNewPlayer() {
 }
 
 function getActivePitchers(innNum) {
+    const isPractice = document.getElementById('practiceToggle').checked;
     const red1 = document.getElementById('redP1Select').value;
     const blue1 = document.getElementById('blueP1Select').value;
     const red2 = document.getElementById('redP2Select').value;
     const blue2 = document.getElementById('blueP2Select').value;
+
+    if (isPractice) {
+        return {
+            redActive: red1,
+            blueActive: "N/A",
+            redP1: red1,
+            redP2: red1,
+            blueP1: "N/A",
+            blueP2: "N/A"
+        };
+    }
 
     const isOdd = (innNum % 2 !== 0);
 
@@ -129,9 +220,15 @@ function getActivePitchers(innNum) {
 }
 
 function updateMatchupBanner() {
+    const isPractice = document.getElementById('practiceToggle').checked;
     const pitchers = getActivePitchers(currentInning);
-    document.getElementById('red-pitcher-label').innerText = "RED: " + pitchers.redActive.toUpperCase();
-    document.getElementById('blue-pitcher-label').innerText = "BLUE: " + pitchers.blueActive.toUpperCase();
+
+    if (isPractice) {
+        document.getElementById('red-pitcher-label').innerText = "PLAYER: " + pitchers.redActive.toUpperCase();
+    } else {
+        document.getElementById('red-pitcher-label').innerText = "RED: " + pitchers.redActive.toUpperCase();
+        document.getElementById('blue-pitcher-label').innerText = "BLUE: " + pitchers.blueActive.toUpperCase();
+    }
 
     updatePitcherStats();
 }
@@ -142,7 +239,9 @@ function updatePitcherStats() {
 
     let statsMap = {};
     players.forEach(p => {
-        statsMap[p] = { board: 0, hole: 0, pts: 0 };
+        if (p !== "N/A") {
+            statsMap[p] = { board: 0, hole: 0, pts: 0 };
+        }
     });
 
     inningsHistory.forEach(item => {
@@ -159,7 +258,10 @@ function updatePitcherStats() {
     });
 
     const setBox = (nameId, lineId, boxId, playerName, activeName) => {
-        document.getElementById(nameId).innerText = playerName;
+        const nameElem = document.getElementById(nameId);
+        if (!nameElem) return;
+
+        nameElem.innerText = playerName;
         const s = statsMap[playerName] || { pts: 0, board: 0, hole: 0 };
         document.getElementById(lineId).innerText = `${s.pts} pts (${s.board}B / ${s.hole}H)`;
 
@@ -182,6 +284,7 @@ function lockSetupInputs() {
     document.getElementById('blueP1Select').disabled = true;
     document.getElementById('redP2Select').disabled = true;
     document.getElementById('blueP2Select').disabled = true;
+    document.getElementById('practiceToggle').disabled = true;
 }
 
 function renderSelectors(team, stateObj, boardContainerId, holeContainerId) {
@@ -224,6 +327,7 @@ function renderSelectors(team, stateObj, boardContainerId, holeContainerId) {
 }
 
 function getRunningTotalsUpTo(targetInning) {
+    const isPractice = document.getElementById('practiceToggle').checked;
     let redTotal = 0;
     let blueTotal = 0;
 
@@ -232,10 +336,14 @@ function getRunningTotalsUpTo(targetInning) {
             let rPts = (item.rB * 1) + (item.rH * 3);
             let bPts = (item.bB * 1) + (item.bH * 3);
 
-            if (rPts > bPts) {
-                redTotal += (rPts - bPts);
-            } else if (bPts > rPts) {
-                blueTotal += (bPts - rPts);
+            if (isPractice) {
+                redTotal += rPts;
+            } else {
+                if (rPts > bPts) {
+                    redTotal += (rPts - bPts);
+                } else if (bPts > rPts) {
+                    blueTotal += (bPts - rPts);
+                }
             }
         }
     });
@@ -246,11 +354,12 @@ function getRunningTotalsUpTo(targetInning) {
 function calculateInning() {
     lockSetupInputs();
     const isLogging = document.getElementById('loggingToggle').checked;
+    const isPractice = document.getElementById('practiceToggle').checked;
 
     let rB = activeScores.red.board;
     let rH = activeScores.red.hole;
-    let bB = activeScores.blue.board;
-    let bH = activeScores.blue.hole;
+    let bB = isPractice ? 0 : activeScores.blue.board;
+    let bH = isPractice ? 0 : activeScores.blue.hole;
 
     const pitchers = getActivePitchers(currentInning);
 
@@ -265,7 +374,15 @@ function calculateInning() {
     const totals = getRunningTotalsUpTo(currentInning);
 
     if (isLogging) {
-        logInningToSheets(currentInning, pitchers.redActive, pitchers.blueActive, rB, rH, bB, bH, totals.redTotal, totals.blueTotal, false);
+        logInningToSheets(
+            currentInning, 
+            pitchers.redActive, 
+            pitchers.blueActive, 
+            rB, rH, bB, bH, 
+            totals.redTotal, 
+            totals.blueTotal, 
+            isPractice
+        );
     }
 
     recalculateGame();
@@ -280,6 +397,7 @@ function calculateInning() {
 }
 
 function recalculateGame() {
+    const isPractice = document.getElementById('practiceToggle').checked;
     let totalRed = 0, totalBlue = 0;
 
     const logBody = document.getElementById('log-body');
@@ -293,14 +411,18 @@ function recalculateGame() {
         let innScoreText = "0";
         let innScoreClass = "inn-score-tie";
 
-        if (innDiff > 0) {
-            totalRed += innDiff;
-            innScoreText = `+${innDiff}`;
-            innScoreClass = "inn-score-red";
-        } else if (innDiff < 0) {
-            totalBlue += Math.abs(innDiff);
-            innScoreText = `+${Math.abs(innDiff)}`;
-            innScoreClass = "inn-score-blue";
+        if (isPractice) {
+            totalRed += rPts;
+        } else {
+            if (innDiff > 0) {
+                totalRed += innDiff;
+                innScoreText = `+${innDiff}`;
+                innScoreClass = "inn-score-red";
+            } else if (innDiff < 0) {
+                totalBlue += Math.abs(innDiff);
+                innScoreText = `+${Math.abs(innDiff)}`;
+                innScoreClass = "inn-score-blue";
+            }
         }
 
         let row = logBody.insertRow(0);
@@ -318,33 +440,43 @@ function recalculateGame() {
         redPtsCell.innerText = rPts;
         redPtsCell.className = "red-pts-cell";
 
-        // Column 3: Blue Pitcher Name
-        row.insertCell(3).innerText = item.bluePitcher;
+        if (!isPractice) {
+            // Column 3: Blue Pitcher Name
+            row.insertCell(3).innerText = item.bluePitcher;
 
-        // Column 4: Blue Points (Color Coded)
-        let bluePtsCell = row.insertCell(4);
-        bluePtsCell.innerText = bPts;
-        bluePtsCell.className = "blue-pts-cell";
+            // Column 4: Blue Points (Color Coded)
+            let bluePtsCell = row.insertCell(4);
+            bluePtsCell.innerText = bPts;
+            bluePtsCell.className = "blue-pts-cell";
 
-        // Column 5: Inning Score (+Net Points colored by winning team or black for tie)
-        let innScoreCell = row.insertCell(5);
-        innScoreCell.innerText = innScoreText;
-        innScoreCell.className = `inn-score-cell ${innScoreClass}`;
+            // Column 5: Inning Score
+            let innScoreCell = row.insertCell(5);
+            innScoreCell.innerText = innScoreText;
+            innScoreCell.className = `inn-score-cell ${innScoreClass}`;
 
-        // Column 6: Running Match Score (Numbers color-coded by team)
-        let matchScoreCell = row.insertCell(6);
-        matchScoreCell.className = "match-score-cell";
-        matchScoreCell.innerHTML = `<span class="match-score-red">${totalRed}</span> - <span class="match-score-blue">${totalBlue}</span>`;
+            // Column 6: Match Score
+            let matchScoreCell = row.insertCell(6);
+            matchScoreCell.className = "match-score-cell";
+            matchScoreCell.innerHTML = `<span class="match-score-red">${totalRed}</span> - <span class="match-score-blue">${totalBlue}</span>`;
 
-        // Column 7: Action Link
-        row.insertCell(7).innerHTML = `<span class="edit-action-link">Edit</span>`;
+            // Column 7: Action Link
+            row.insertCell(7).innerHTML = `<span class="edit-action-link">Edit</span>`;
+        } else {
+            // Column 3: Practice Total Score
+            let matchScoreCell = row.insertCell(3);
+            matchScoreCell.className = "match-score-cell";
+            matchScoreCell.innerHTML = `<span class="match-score-red">${totalRed}</span>`;
+
+            // Column 4: Action Link
+            row.insertCell(4).innerHTML = `<span class="edit-action-link">Edit</span>`;
+        }
     });
 
     document.getElementById('red-total').innerText = totalRed;
     document.getElementById('blue-total').innerText = totalBlue;
     updatePitcherStats();
 
-    if (totalRed >= 21 || totalBlue >= 21) {
+    if (!isPractice && (totalRed >= 21 || totalBlue >= 21)) {
         const winner = totalRed >= 21 ? "Red" : "Blue";
         setTimeout(() => {
             alert(winner + " Wins!");
@@ -359,16 +491,21 @@ function recalculateGame() {
 function openEditModal(index) {
     editingInningIndex = index;
     let data = inningsHistory[index];
+    const isPractice = document.getElementById('practiceToggle').checked;
     
     document.getElementById('edit-inn-num').innerText = data.inn;
-    document.getElementById('modal-red-pitcher-label').innerText = "RED: " + data.redPitcher.toUpperCase();
-    document.getElementById('modal-blue-pitcher-label').innerText = "BLUE: " + data.bluePitcher.toUpperCase();
+    document.getElementById('modal-red-pitcher-label').innerText = (isPractice ? "PLAYER: " : "RED: ") + data.redPitcher.toUpperCase();
+    if (!isPractice) {
+        document.getElementById('modal-blue-pitcher-label').innerText = "BLUE: " + data.bluePitcher.toUpperCase();
+    }
 
     modalScores.red = { board: data.rB, hole: data.rH };
     modalScores.blue = { board: data.bB, hole: data.bH };
 
     renderSelectors('red', modalScores, 'modal-red-board-boxes', 'modal-red-hole-boxes');
-    renderSelectors('blue', modalScores, 'modal-blue-board-boxes', 'modal-blue-hole-boxes');
+    if (!isPractice) {
+        renderSelectors('blue', modalScores, 'modal-blue-board-boxes', 'modal-blue-hole-boxes');
+    }
 
     document.getElementById('editModal').style.display = 'flex';
 }
@@ -380,11 +517,12 @@ function closeEditModal() {
 
 function saveInningEdit() {
     if (editingInningIndex === null) return;
+    const isPractice = document.getElementById('practiceToggle').checked;
 
     let rB = modalScores.red.board;
     let rH = modalScores.red.hole;
-    let bB = modalScores.blue.board;
-    let bH = modalScores.blue.hole;
+    let bB = isPractice ? 0 : modalScores.blue.board;
+    let bH = isPractice ? 0 : modalScores.blue.hole;
 
     let item = inningsHistory[editingInningIndex];
     item.rB = rB;
@@ -410,7 +548,7 @@ function saveInningEdit() {
                 currentItem.bH, 
                 totals.redTotal, 
                 totals.blueTotal, 
-                true
+                isPractice
             );
         }
     }
@@ -418,11 +556,13 @@ function saveInningEdit() {
     closeEditModal();
 }
 
-function logInningToSheets(innNum, redName, blueName, redB, redH, blueB, blueH, redRunningTotal, blueRunningTotal, isEdit = false) {
+function logInningToSheets(innNum, redName, blueName, redB, redH, blueB, blueH, redRunningTotal, blueRunningTotal, isPractice = false) {
     const redPts = (redB * 1) + (redH * 3);
     const bluePts = (blueB * 1) + (blueH * 3);
 
-    const playersToLog = [
+    const playersToLog = isPractice ? [
+        { name: redName, color: "Practice", board: redB, hole: redH, pts: redPts }
+    ] : [
         { name: redName, color: "Red", board: redB, hole: redH, pts: redPts },
         { name: blueName, color: "Blue", board: blueB, hole: blueH, pts: bluePts }
     ];
@@ -438,7 +578,7 @@ function logInningToSheets(innNum, redName, blueName, redB, redH, blueB, blueH, 
             pointsScored: p.pts,
             redRunningTotal: redRunningTotal,
             blueRunningTotal: blueRunningTotal,
-            isEdit: isEdit
+            isPractice: isPractice
         };
 
         fetch(SCRIPT_URL, {
