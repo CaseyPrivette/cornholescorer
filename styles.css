@@ -7,8 +7,8 @@
 }
 
 body {
-    background-color: #f1f5f9;
-    color: #0f172a;
+    background-color: #0f172a;
+    color: #f8fafc;
     padding-bottom: 40px;
 }
 
@@ -20,14 +20,15 @@ body {
 
 /* HEADER & TABS */
 .app-header {
-    background: #0f172a;
-    color: #ffffff;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
     padding: 16px;
     text-align: center;
 }
 
 .app-header h1 {
     font-size: 1.5rem;
+    color: #f8fafc;
     margin-bottom: 12px;
 }
 
@@ -38,18 +39,20 @@ body {
 }
 
 .tab-btn {
-    background: #1e293b;
+    background: #0f172a;
     color: #94a3b8;
-    border: none;
+    border: 1px solid #334155;
     padding: 10px 20px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: 700;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .tab-btn.active {
     background: #38bdf8;
     color: #0f172a;
+    border-color: #38bdf8;
 }
 
 .tab-content {
@@ -62,17 +65,24 @@ body {
 
 /* CARDS & CONTAINERS */
 .card {
-    background: #ffffff;
+    background: #1e293b;
+    border: 1px solid #334155;
     border-radius: 12px;
     padding: 20px;
     margin-top: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.card-header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
 }
 
 .card h2 {
     font-size: 1.3rem;
-    margin-bottom: 16px;
-    color: #1e293b;
+    color: #f8fafc;
 }
 
 .form-group {
@@ -83,17 +93,32 @@ body {
     display: block;
     font-weight: 600;
     margin-bottom: 6px;
-    color: #475569;
+    color: #94a3b8;
 }
 
 .form-group input, 
 .form-group select {
     width: 100%;
     padding: 12px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #334155;
     border-radius: 8px;
     font-size: 1rem;
+    background-color: #0f172a;
+    color: #f8fafc;
 }
+
+.input-with-btn {
+    display: flex;
+    gap: 8px;
+}
+
+.add-player-box {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #334155;
+}
+
+.mt-20 { margin-top: 20px; }
 
 /* SETUP GRID */
 .team-setup-grid {
@@ -107,13 +132,14 @@ body {
 }
 
 .team-config {
-    padding: 12px;
-    background: #f8fafc;
+    padding: 14px;
+    background: #0f172a;
     border-radius: 8px;
+    border: 1px solid #334155;
 }
 
-.red-border-left { border-left: 6px solid #dc3545; }
-.blue-border-left { border-left: 6px solid #0d6efd; }
+.red-border-left { border-left: 6px solid #ef4444; }
+.blue-border-left { border-left: 6px solid #3b82f6; }
 
 /* SCOREBOARD BANNER */
 .scoreboard {
@@ -130,8 +156,8 @@ body {
     text-align: center;
 }
 
-.red-bg { background: #dc3545; }
-.blue-bg { background: #0d6efd; }
+.red-bg { background: #dc2626; }
+.blue-bg { background: #2563eb; }
 
 .team-label {
     display: block;
@@ -150,21 +176,21 @@ body {
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 20px;
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
+    background: #0f172a;
+    border: 1px solid #334155;
 }
 
-.red-border { border-left: 8px solid #dc3545; }
-.blue-border { border-left: 8px solid #0d6efd; }
+.red-border { border-left: 8px solid #ef4444; }
+.blue-border { border-left: 8px solid #3b82f6; }
 
 .team-input-section h3 {
-    font-size: 1.45rem; /* Larger pitcher header */
+    font-size: 1.45rem;
     font-weight: 900;
     margin-bottom: 16px;
     letter-spacing: 0.5px;
+    color: #f8fafc;
 }
 
-/* Label Stacked on Top of Buttons */
 .selector-row {
     display: flex;
     flex-direction: column;
@@ -179,9 +205,9 @@ body {
 
 .selector-row label {
     width: 100%;
-    font-size: 1.25rem; /* Increased label size */
+    font-size: 1.1rem;
     font-weight: 800;
-    color: #0f172a;
+    color: #38bdf8;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -194,59 +220,55 @@ body {
 
 .box-btn {
     flex: 1;
-    min-height: 56px; /* Touch target height */
-    background: #ffffff;
-    border: 2px solid #94a3b8;
+    min-height: 56px;
+    background: #1e293b;
+    border: 2px solid #334155;
     border-radius: 8px;
     font-weight: 900;
-    font-size: 1.45rem; /* Enlarged button text */
-    color: #0f172a;
+    font-size: 1.45rem;
+    color: #f8fafc;
     cursor: pointer;
     text-align: center;
     transition: all 0.15s ease-in-out;
 }
 
 .box-btn:hover:not(.disabled) { 
-    background: #e2e8f0; 
+    background: #334155; 
 }
 
 .box-btn.selected {
-    background: #0f172a;
-    color: #ffffff;
-    border-color: #0f172a;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    background: #38bdf8;
+    color: #0f172a;
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
 }
 
 .box-btn.disabled {
-    opacity: 0.25;
+    opacity: 0.2;
     cursor: not-allowed;
-    background: #e2e8f0;
-    border-color: #cbd5e1;
+    background: #0f172a;
+    border-color: #1e293b;
 }
 
 /* BUTTONS */
 .btn {
-    padding: 14px 20px;
+    padding: 12px 18px;
     border: none;
     border-radius: 8px;
     font-weight: 800;
-    font-size: 1.1rem;
+    font-size: 1rem;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
-.btn-primary {
-    background: #0f172a;
-    color: #ffffff;
-}
-
-.btn-primary:hover {
-    background: #1e293b;
-}
-
-.btn-block {
-    width: 100%;
-    display: block;
-}
+.btn-sm { padding: 8px 12px; font-size: 0.85rem; }
+.btn-primary { background: #38bdf8; color: #0f172a; }
+.btn-primary:hover { background: #0284c7; color: #ffffff; }
+.btn-secondary { background: #475569; color: #ffffff; }
+.btn-secondary:hover { background: #334155; }
+.btn-success { background: #22c55e; color: #0f172a; }
+.btn-success:hover { background: #16a34a; color: #ffffff; }
+.btn-block { width: 100%; display: block; }
 
 /* LOG TABLE */
 .table-responsive {
@@ -261,17 +283,17 @@ body {
 
 .log-table th, .log-table td {
     padding: 10px 8px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #334155;
     font-size: 0.95rem;
 }
 
 .log-table th {
-    background: #f8fafc;
-    color: #64748b;
+    background: #0f172a;
+    color: #94a3b8;
     font-weight: 700;
 }
 
-/* PLAYER STAT CARDS & FEATURED AVG METRIC */
+/* PLAYER STAT CARDS & METRIC HIGHLIGHTS */
 .stats-container {
     display: flex;
     flex-direction: column;
@@ -279,8 +301,8 @@ body {
 }
 
 .player-stat-card {
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
+    background: #0f172a;
+    border: 1px solid #334155;
     border-radius: 10px;
     padding: 16px;
 }
@@ -289,7 +311,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid #334155;
     padding-bottom: 12px;
     margin-bottom: 16px;
     flex-wrap: wrap;
@@ -299,12 +321,12 @@ body {
 .player-card-header h3 {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #0f172a;
+    color: #f8fafc;
 }
 
-/* Top Featured Metric Box */
 .highlight-metric-box {
-    background: #0f172a;
+    background: #1e293b;
+    border: 1px solid #38bdf8;
     color: #ffffff;
     padding: 8px 16px;
     border-radius: 8px;
@@ -325,7 +347,7 @@ body {
     display: block;
     font-size: 1.85rem;
     font-weight: 900;
-    color: #38bdf8; /* Accent light blue */
+    color: #38bdf8;
     line-height: 1.1;
 }
 
@@ -336,8 +358,8 @@ body {
 }
 
 .stat-box {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: #1e293b;
+    border: 1px solid #334155;
     border-radius: 8px;
     padding: 10px;
     text-align: center;
@@ -347,11 +369,11 @@ body {
     display: block;
     font-size: 1.3rem;
     font-weight: 800;
-    color: #0f172a;
+    color: #f8fafc;
 }
 
 .stat-box .stat-label {
     font-size: 0.8rem;
-    color: #64748b;
+    color: #94a3b8;
     font-weight: 600;
 }
