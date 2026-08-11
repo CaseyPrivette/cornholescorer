@@ -20,10 +20,13 @@
 
     <main class="container">
 
-        <!-- TAB 1: MATCH SETUP -->
+        <!-- TAB 1: MATCH SETUP & ROSTER MANAGEMENT -->
         <div id="tab-setup" class="tab-content active">
             <section class="card">
-                <h2>Match Setup</h2>
+                <div class="card-header-actions">
+                    <h2>Match Setup</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="fetchRosterFromSheet()">Sync Roster</button>
+                </div>
                 
                 <div class="form-group">
                     <label for="game-mode">Game Mode</label>
@@ -35,34 +38,43 @@
                 </div>
 
                 <div class="team-setup-grid">
-                    <!-- Red Team -->
+                    <!-- Red Team Roster Selection -->
                     <div class="team-config red-border-left">
                         <h3>Red Team</h3>
                         <div class="form-group">
                             <label for="red-player-1">Player 1 (Pitcher A)</label>
-                            <input type="text" id="red-player-1" value="Red Player 1">
+                            <select id="red-player-1" class="roster-select"></select>
                         </div>
                         <div class="form-group" id="red-p2-group">
                             <label for="red-player-2">Player 2 (Pitcher B)</label>
-                            <input type="text" id="red-player-2" value="Red Player 2">
+                            <select id="red-player-2" class="roster-select"></select>
                         </div>
                     </div>
 
-                    <!-- Blue Team -->
+                    <!-- Blue Team Roster Selection -->
                     <div class="team-config blue-border-left" id="blue-setup-section">
                         <h3>Blue Team</h3>
                         <div class="form-group">
                             <label for="blue-player-1">Player 1 (Pitcher A)</label>
-                            <input type="text" id="blue-player-1" value="Blue Player 1">
+                            <select id="blue-player-1" class="roster-select"></select>
                         </div>
                         <div class="form-group" id="blue-p2-group">
                             <label for="blue-player-2">Player 2 (Pitcher B)</label>
-                            <input type="text" id="blue-player-2" value="Blue Player 2">
+                            <select id="blue-player-2" class="roster-select"></select>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn btn-primary btn-block" onclick="startMatch()">Start Match</button>
+                <!-- Add New Player to Google Sheet Roster -->
+                <div class="add-player-box">
+                    <label for="new-player-name">Add New Player to Sheet Roster</label>
+                    <div class="input-with-btn">
+                        <input type="text" id="new-player-name" placeholder="Enter player name">
+                        <button class="btn btn-secondary" onclick="addPlayerToSheet()">Add Player</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block mt-20" onclick="startMatch()">Start Match</button>
             </section>
         </div>
 
@@ -84,7 +96,7 @@
             <section class="card">
                 <h2>Inning <span id="display-inn-num">1</span> Throw Input</h2>
 
-                <!-- Red / Practice Pitcher Selection -->
+                <!-- Red Pitcher Inputs -->
                 <div class="team-input-section red-border">
                     <h3 id="red-pitcher-label">RED: PLAYER NAME</h3>
                     
@@ -98,7 +110,7 @@
                     </div>
                 </div>
 
-                <!-- Blue Pitcher Selection -->
+                <!-- Blue Pitcher Inputs -->
                 <div class="team-input-section blue-border" id="blue-team-section">
                     <h3 id="blue-pitcher-label">BLUE: PLAYER NAME</h3>
                     
@@ -117,7 +129,10 @@
 
             <!-- Inning Log Table -->
             <section class="card">
-                <h2>Inning Log</h2>
+                <div class="card-header-actions">
+                    <h2>Inning Log</h2>
+                    <button class="btn btn-success btn-sm" onclick="saveMatchToSheet()">Save Match to Sheets</button>
+                </div>
                 <div class="table-responsive">
                     <table class="log-table">
                         <thead>
@@ -132,7 +147,7 @@
                             </tr>
                         </thead>
                         <tbody id="log-body">
-                            <!-- Rows injected via JS -->
+                            <!-- Inning entries dynamically rendered via JS -->
                         </tbody>
                     </table>
                 </div>
@@ -144,7 +159,7 @@
             <section class="card">
                 <h2>Match Player Statistics</h2>
                 <div id="stats-container" class="stats-container">
-                    <!-- Cards with Avg / Inning injected dynamically via JS -->
+                    <!-- Stat cards dynamically rendered via JS -->
                 </div>
             </section>
         </div>
