@@ -11,7 +11,7 @@ body {
     color: #222222;
     padding: 16px;
     line-height: 1.5;
-    font-size: 18px; /* Increased base body font size */
+    font-size: 18px;
 }
 
 .container {
@@ -32,21 +32,21 @@ body {
 }
 
 .header h1 {
-    font-size: 1.6rem; /* Increased from 1.2rem */
+    font-size: 1.6rem;
     font-weight: 800;
     color: #111;
 }
 
 .quick-score-banner {
-    font-size: 1.3rem; /* Increased from 0.9rem */
+    font-size: 1.3rem;
     font-weight: 800;
 }
 
-.qs-red { color: #d9534f; }
-.qs-blue { color: #0275d8; }
+.qs-red { color: #dc3545; }
+.qs-blue { color: #0d6efd; }
 .qs-divider { margin: 0 8px; color: #aaa; }
 
-/* Tab Navigation System */
+/* Tab Navigation */
 .tab-nav {
     display: flex;
     gap: 8px;
@@ -58,10 +58,10 @@ body {
 
 .tab-btn {
     flex: 1;
-    padding: 14px 0; /* Larger touch target */
+    padding: 14px 0;
     border: none;
     background: transparent;
-    font-size: 1.15rem; /* Increased from 0.9rem */
+    font-size: 1.15rem;
     font-weight: 800;
     color: #334155;
     border-radius: 8px;
@@ -75,13 +75,8 @@ body {
     box-shadow: 0 3px 6px rgba(0,0,0,0.12);
 }
 
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
 /* Switches & Controls */
 .toggle-container-stacked {
@@ -95,7 +90,7 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
-    font-size: 1.15rem; /* Increased from 0.9rem */
+    font-size: 1.15rem;
     font-weight: 700;
     color: #1e293b;
     cursor: pointer;
@@ -105,7 +100,7 @@ body {
 .switch-label input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
-    width: 54px; /* Larger switch for easier tapping */
+    width: 54px;
     height: 30px;
     background-color: #94a3b8;
     border-radius: 20px;
@@ -117,9 +112,7 @@ body {
     vertical-align: middle;
 }
 
-.switch-label input[type="checkbox"]:checked {
-    background-color: #28a745;
-}
+.switch-label input[type="checkbox"]:checked { background-color: #28a745; }
 
 .switch-label input[type="checkbox"]::before {
     content: "";
@@ -134,9 +127,7 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.25);
 }
 
-.switch-label input[type="checkbox"]:checked::before {
-    transform: translateX(24px);
-}
+.switch-label input[type="checkbox"]:checked::before { transform: translateX(24px); }
 
 /* Cards & Layouts */
 .card {
@@ -155,7 +146,7 @@ body {
 }
 
 .card h2 {
-    font-size: 1.4rem; /* Increased from 1.1rem */
+    font-size: 1.4rem;
     font-weight: 800;
     margin-bottom: 14px;
     color: #111111;
@@ -164,7 +155,7 @@ body {
 }
 
 .card h3 {
-    font-size: 1.2rem; /* Increased from 0.95rem */
+    font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 10px;
     color: #222222;
@@ -176,7 +167,7 @@ body {
     gap: 16px;
 }
 
-.setup-grid.practice-mode {
+.setup-grid.single-col {
     grid-template-columns: 1fr;
 }
 
@@ -187,13 +178,11 @@ body {
     border: 1px solid #cbd5e1;
 }
 
-.form-group {
-    margin-bottom: 14px;
-}
+.form-group { margin-bottom: 14px; }
 
 .form-group label {
     display: block;
-    font-size: 1rem; /* Increased from 0.8rem */
+    font-size: 1rem;
     font-weight: 700;
     margin-bottom: 6px;
     color: #334155;
@@ -201,10 +190,10 @@ body {
 
 .form-control {
     width: 100%;
-    padding: 12px 14px; /* Roomier padding for input text */
+    padding: 12px 14px;
     border: 2px solid #94a3b8;
     border-radius: 6px;
-    font-size: 1.1rem; /* Increased from 0.9rem */
+    font-size: 1.1rem;
     background-color: #fff;
     color: #0f172a;
     font-weight: 600;
@@ -233,14 +222,14 @@ body {
 .blue-bg { background-color: #0d6efd; }
 
 .team-label {
-    font-size: 1.1rem; /* Increased from 0.85rem */
+    font-size: 1.1rem;
     font-weight: 800;
     letter-spacing: 1.5px;
     text-transform: uppercase;
 }
 
 .team-score {
-    font-size: 3.2rem; /* Increased from 2.4rem */
+    font-size: 3.2rem;
     font-weight: 900;
     line-height: 1;
     margin-top: 6px;
@@ -264,13 +253,11 @@ body {
     margin-bottom: 12px;
 }
 
-.selector-row:last-child {
-    margin-bottom: 0;
-}
+.selector-row:last-child { margin-bottom: 0; }
 
 .selector-row label {
-    width: 120px; /* Slightly widened label width */
-    font-size: 1.05rem; /* Increased from 0.85rem */
+    width: 120px;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #1e293b;
 }
@@ -283,21 +270,19 @@ body {
 
 .box-btn {
     flex: 1;
-    min-height: 48px; /* Taller button area (up from 38px) */
+    min-height: 48px;
     background: #ffffff;
     border: 2px solid #94a3b8;
     border-radius: 6px;
     font-weight: 800;
-    font-size: 1.25rem; /* Increased from 0.95rem */
+    font-size: 1.25rem;
     color: #0f172a;
     cursor: pointer;
     text-align: center;
     transition: all 0.15s ease-in-out;
 }
 
-.box-btn:hover:not(.disabled) {
-    background: #e2e8f0;
-}
+.box-btn:hover:not(.disabled) { background: #e2e8f0; }
 
 .box-btn.selected {
     background: #0f172a;
@@ -333,63 +318,96 @@ body {
 .btn-sm { padding: 8px 14px; font-size: 0.95rem; }
 .btn-block { width: 100%; padding: 16px; font-size: 1.25rem; margin-top: 8px; }
 
-/* Stats Grid */
+/* STATS PAGE - ENHANCED VISIBILITY & TEAM COLORS */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 20px;
 }
 
-.stats-grid.practice-mode {
+.stats-grid.single-col {
     grid-template-columns: 1fr;
 }
 
 .stats-column {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
+}
+
+.team-header-red {
+    color: #dc3545;
+    font-size: 1.35rem;
+    font-weight: 800;
+    border-bottom: 3px solid #dc3545;
+    padding-bottom: 4px;
+}
+
+.team-header-blue {
+    color: #0d6efd;
+    font-size: 1.35rem;
+    font-weight: 800;
+    border-bottom: 3px solid #0d6efd;
+    padding-bottom: 4px;
 }
 
 .player-stat-card {
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 14px 16px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 18px;
     position: relative;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
     transition: all 0.2s ease-in-out;
 }
 
+.stat-card-red {
+    border: 2px solid #f8d7da;
+    border-left: 8px solid #dc3545;
+    background-color: #fff5f5;
+}
+
+.stat-card-blue {
+    border: 2px solid #cff4fc;
+    border-left: 8px solid #0d6efd;
+    background-color: #f0f7ff;
+}
+
 .player-stat-card.active-pitcher {
-    border: 3px solid #f59e0b;
-    background-color: #fffbeb;
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+    border: 3px solid #f59e0b !important;
+    border-left: 10px solid #f59e0b !important;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+    background-color: #fffdf0;
 }
 
 .player-name {
-    font-weight: 800;
-    font-size: 1.15rem; /* Increased from 0.9rem */
-    margin-bottom: 8px;
-    border-bottom: 2px solid #cbd5e1;
+    font-weight: 900;
+    font-size: 1.4rem; /* Further increased for easy readability */
+    margin-bottom: 10px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
     padding-bottom: 6px;
-    color: #0f172a;
 }
+
+.red-text { color: #b02a37; }
+.blue-text { color: #0a58ca; }
 
 .player-stats-body {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .stat-line {
-    font-size: 1rem; /* Increased from 0.825rem */
-    color: #334155;
+    font-size: 1.15rem; /* Large readability font */
+    color: #1e293b;
+    font-weight: 600;
 }
 
 .stat-line strong {
-    color: #0f172a;
+    color: #000000;
+    font-weight: 800;
 }
 
-/* Inning Log Table */
+/* Table */
 .table-responsive {
     overflow-x: auto;
     border-radius: 6px;
@@ -398,13 +416,13 @@ body {
 .log-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 1.05rem; /* Increased from 0.85rem */
+    font-size: 1.05rem;
     text-align: center;
     background: #fff;
 }
 
 .log-table th, .log-table td {
-    padding: 12px 10px; /* Roomier table cells */
+    padding: 12px 10px;
     border-bottom: 1px solid #e2e8f0;
     white-space: nowrap;
 }
@@ -432,18 +450,16 @@ body {
 .edit-action-link {
     color: #0d6efd;
     text-decoration: underline;
-    font-size: 1rem; /* Increased from 0.8rem */
+    font-size: 1rem;
     font-weight: 700;
 }
 
-/* Popup Modal Windows */
+/* Modal Window */
 .modal {
     display: none;
     position: fixed;
-    top: 0; 
-    left: 0;
-    width: 100vw; 
-    height: 100vh;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.6);
     justify-content: center;
     align-items: center;
@@ -457,11 +473,6 @@ body {
     width: 92%;
     max-width: 500px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-}
-
-.modal-content h3 {
-    font-size: 1.35rem;
-    margin-bottom: 12px;
 }
 
 .modal-actions {

@@ -19,7 +19,7 @@
             </div>
         </header>
 
-        <!-- Tab Navigation Navigation -->
+        <!-- Tab Navigation -->
         <nav class="tab-nav">
             <button class="tab-btn active" data-tab="tab-setup">Game Setup</button>
             <button class="tab-btn" data-tab="tab-scorekeeping">Scorekeeping</button>
@@ -33,7 +33,11 @@
                 <div class="toggle-container-stacked">
                     <label class="switch-label">
                         <input type="checkbox" id="practiceToggle">
-                        <span>Practice Mode</span>
+                        <span>Practice Mode (Single Player)</span>
+                    </label>
+                    <label class="switch-label" id="oneVsOneLabelContainer">
+                        <input type="checkbox" id="oneVsOneToggle">
+                        <span>1 vs 1 Mode</span>
                     </label>
                     <label class="switch-label">
                         <input type="checkbox" id="loggingToggle" checked>
@@ -49,7 +53,7 @@
                 </div>
                 
                 <div id="setup-grid" class="setup-grid">
-                    <!-- Red Team / Main Matchup Setup -->
+                    <!-- 1st Inning Matchup / Main Matchup -->
                     <div class="setup-box">
                         <h3 id="matchup-title-1">1st Inning Matchup</h3>
                         <div class="form-group">
@@ -62,7 +66,7 @@
                         </div>
                     </div>
 
-                    <!-- 2nd Inning Matchup Setup -->
+                    <!-- 2nd Inning Matchup Setup (Hidden in Practice & 1v1) -->
                     <div class="setup-box" id="matchup-box-2">
                         <h3>2nd Inning Matchup</h3>
                         <div class="form-group">
@@ -146,7 +150,7 @@
                             </tr>
                         </thead>
                         <tbody id="log-body">
-                            <!-- Dynamically Generated Inning Rows -->
+                            <!-- Dynamic rows -->
                         </tbody>
                     </table>
                 </div>
@@ -161,30 +165,30 @@
                     
                     <!-- Red Team Stats Column -->
                     <div class="stats-column">
-                        <h3 id="red-stat-header">Red Team</h3>
+                        <h3 id="red-stat-header" class="team-header-red">RED TEAM</h3>
                         
-                        <div id="box-red-p1" class="player-stat-card">
-                            <div id="stat-red1-name" class="player-name">Red Player 1</div>
+                        <div id="box-red-p1" class="player-stat-card stat-card-red">
+                            <div id="stat-red1-name" class="player-name red-text">Red Player 1</div>
                             <div id="stat-red1-line" class="player-stats-body"></div>
                         </div>
 
-                        <div id="box-red-p2" class="player-stat-card">
-                            <div id="stat-red2-name" class="player-name">Red Player 2</div>
+                        <div id="box-red-p2" class="player-stat-card stat-card-red">
+                            <div id="stat-red2-name" class="player-name red-text">Red Player 2</div>
                             <div id="stat-red2-line" class="player-stats-body"></div>
                         </div>
                     </div>
 
                     <!-- Blue Team Stats Column -->
                     <div class="stats-column" id="blue-stat-col">
-                        <h3>Blue Team</h3>
+                        <h3 class="team-header-blue">BLUE TEAM</h3>
                         
-                        <div id="box-blue-p1" class="player-stat-card">
-                            <div id="stat-blue1-name" class="player-name">Blue Player 1</div>
+                        <div id="box-blue-p1" class="player-stat-card stat-card-blue">
+                            <div id="stat-blue1-name" class="player-name blue-text">Blue Player 1</div>
                             <div id="stat-blue1-line" class="player-stats-body"></div>
                         </div>
 
-                        <div id="box-blue-p2" class="player-stat-card">
-                            <div id="stat-blue2-name" class="player-name">Blue Player 2</div>
+                        <div id="box-blue-p2" class="player-stat-card stat-card-blue">
+                            <div id="stat-blue2-name" class="player-name blue-text">Blue Player 2</div>
                             <div id="stat-blue2-line" class="player-stats-body"></div>
                         </div>
                     </div>

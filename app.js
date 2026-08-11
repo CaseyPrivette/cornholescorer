@@ -19,14 +19,16 @@ document.addEventListener("DOMContentLoaded", () => {
     initGame();
     setupTabListeners();
 
-    // Event Bindings
+    // Event Listeners
     document.getElementById('btnAddPlayer').addEventListener('click', openAddPlayerModal);
     document.getElementById('btnCancelAddPlayer').addEventListener('click', closeAddPlayerModal);
     document.getElementById('btnSubmitAddPlayer').addEventListener('click', submitNewPlayer);
     document.getElementById('btnEndInning').addEventListener('click', calculateInning);
     document.getElementById('btnCancelEdit').addEventListener('click', closeEditModal);
     document.getElementById('btnSaveEdit').addEventListener('click', saveInningEdit);
-    document.getElementById('practiceToggle').addEventListener('change', handlePracticeModeToggle);
+    
+    document.getElementById('practiceToggle').addEventListener('change', handleModeToggles);
+    document.getElementById('oneVsOneToggle').addEventListener('change', handleModeToggles);
     document.getElementById('btnStartGameNav').addEventListener('click', () => switchTab('tab-scorekeeping'));
 
     ['redP1Select', 'blueP1Select', 'redP2Select', 'blueP2Select'].forEach(id => {
@@ -38,27 +40,18 @@ function setupTabListeners() {
     const tabs = document.querySelectorAll('.tab-btn');
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            const target = tab.getAttribute('data-tab');
-            switchTab(target);
+            switchTab(tab.getAttribute('data-tab'));
         });
     });
 }
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        if (btn.getAttribute('data-tab') === tabId) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
     });
 
     document.querySelectorAll('.tab-content').forEach(content => {
-        if (content.id === tabId) {
-            content.classList.add('active');
-        } else {
-            content.classList.remove('active');
-        }
+        content.classList.toggle('active', content.id === tabId);
     });
 }
 
@@ -72,8 +65,20 @@ function initGame() {
     renderSelectors('blue', activeScores, 'blue-board-boxes', 'blue-hole-boxes');
 }
 
-function handlePracticeModeToggle() {
+function handleModeToggles(e) {
     const isPractice = document.getElementById('practiceToggle').checked;
+    const is1v1 = document.getElementById('oneVsOneToggle').checked;
+    const oneVsOneLabelContainer = document.getElementById('oneVsOneLabelContainer');
+
+    // Prevent conflict between Practice and 1v1
+    if (e.target.id === 'practiceToggle' && isPractice) {
+        document.getElementById('oneVsOneToggle').checked = false;
+        oneVsOneLabelContainer.style.display = 'none';
+    } else if (!isPractice) {
+        oneVsOneLabelContainer.style.display = 'flex';
+    }
+
+    const current1v1 = document.getElementById('oneVsOneToggle').checked;
 
     const setupGrid = document.getElementById('setup-grid');
     const matchupBox2 = document.getElementById('matchup-box-2');
@@ -89,6 +94,7 @@ function handlePracticeModeToggle() {
     const statsGrid = document.getElementById('stats-grid');
     const blueStatCol = document.getElementById('blue-stat-col');
     const boxRedP2 = document.getElementById('box-red-p2');
+    const boxBlueP2 = document.getElementById('box-blue-p2');
     const redStatHeader = document.getElementById('red-stat-header');
 
     const thRedPts = document.getElementById('th-red-pts');
@@ -100,7 +106,7 @@ function handlePracticeModeToggle() {
     const modalBlueTeam = document.getElementById('modal-blue-team');
 
     if (isPractice) {
-        setupGrid.classList.add('practice-mode');
+        setupGrid.classList.add('single-col');
         matchupBox2.style.display = 'none';
         blueP1Group.style.display = 'none';
         labelRedP1.innerText = "Player Name";
@@ -112,10 +118,10 @@ function handlePracticeModeToggle() {
 
         blueTeamSection.style.display = 'none';
 
-        statsGrid.classList.add('practice-mode');
+        statsGrid.classList.add('single-col');
         blueStatCol.style.display = 'none';
         boxRedP2.style.display = 'none';
-        redStatHeader.innerText = "Player Stats";
+        redStatHeader.innerText = "PLAYER STATS";
 
         thRedPts.innerText = "Points";
         thBlueP.style.display = 'none';
@@ -124,8 +130,34 @@ function handlePracticeModeToggle() {
         thMatchScore.innerText = "Total Score";
 
         modalBlueTeam.style.display = 'none';
+    } else if (current1v1) {
+        setupGrid.classList.add('single-col');
+        matchupBox2.style.display = 'none';
+        blueP1Group.style.display = 'block';
+        labelRedP1.innerText = "Red Player";
+        matchupTitle1.innerText = "1 vs 1 Players";
+
+        blueScoreBox.style.display = 'flex';
+        redScoreLabel.innerText = "RED";
+        quickScoreBanner.style.display = 'block';
+
+        blueTeamSection.style.display = 'block';
+
+        statsGrid.classList.remove('single-col');
+        blueStatCol.style.display = 'flex';
+        boxRedP2.style.display = 'none';
+        boxBlueP2.style.display = 'none';
+        redStatHeader.innerText = "RED PLAYER";
+
+        thRedPts.innerText = "Red Pts";
+        thBlueP.style.display = '';
+        thBluePts.style.display = '';
+        thInnScore.style.display = '';
+        thMatchScore.innerText = "Match Score";
+
+        modalBlueTeam.style.display = 'block';
     } else {
-        setupGrid.classList.remove('practice-mode');
+        setupGrid.classList.remove('single-col');
         matchupBox2.style.display = 'block';
         blueP1Group.style.display = 'block';
         labelRedP1.innerText = "Red Player 1";
@@ -137,10 +169,11 @@ function handlePracticeModeToggle() {
 
         blueTeamSection.style.display = 'block';
 
-        statsGrid.classList.remove('practice-mode');
+        statsGrid.classList.remove('single-col');
         blueStatCol.style.display = 'flex';
         boxRedP2.style.display = 'block';
-        redStatHeader.innerText = "Red Team";
+        boxBlueP2.style.display = 'block';
+        redStatHeader.innerText = "RED TEAM";
 
         thRedPts.innerText = "Red Pts";
         thBlueP.style.display = '';
@@ -165,7 +198,7 @@ function fetchRosterFromSheets() {
             populatePlayerDropdowns();
         })
         .catch(err => {
-            console.log("Using fallback roster:", err);
+            console.log("Using default roster:", err);
             populatePlayerDropdowns();
         });
 }
@@ -225,24 +258,22 @@ function submitNewPlayer() {
 
 function getActivePitchers(innNum) {
     const isPractice = document.getElementById('practiceToggle').checked;
+    const is1v1 = document.getElementById('oneVsOneToggle').checked;
+
     const red1 = document.getElementById('redP1Select').value;
     const blue1 = document.getElementById('blueP1Select').value;
     const red2 = document.getElementById('redP2Select').value;
     const blue2 = document.getElementById('blueP2Select').value;
 
     if (isPractice) {
-        return {
-            redActive: red1,
-            blueActive: "N/A",
-            redP1: red1,
-            redP2: red1,
-            blueP1: "N/A",
-            blueP2: "N/A"
-        };
+        return { redActive: red1, blueActive: "N/A", redP1: red1, redP2: red1, blueP1: "N/A", blueP2: "N/A" };
+    }
+
+    if (is1v1) {
+        return { redActive: red1, blueActive: blue1, redP1: red1, redP2: "N/A", blueP1: blue1, blueP2: "N/A" };
     }
 
     const isOdd = (innNum % 2 !== 0);
-
     return {
         redActive: isOdd ? red1 : red2,
         blueActive: isOdd ? blue1 : blue2,
@@ -269,12 +300,13 @@ function updateMatchupBanner() {
 
 function updatePitcherStats() {
     const isPractice = document.getElementById('practiceToggle').checked;
+    const is1v1 = document.getElementById('oneVsOneToggle').checked;
     const pitchers = getActivePitchers(currentInning);
     const players = [pitchers.redP1, pitchers.redP2, pitchers.blueP1, pitchers.blueP2];
 
     let statsMap = {};
     players.forEach(p => {
-        if (p !== "N/A") {
+        if (p && p !== "N/A") {
             statsMap[p] = { board: 0, hole: 0, missed: 0, pts: 0, innings: 0 };
         }
     });
@@ -324,7 +356,7 @@ function updatePitcherStats() {
 
     const setBox = (nameId, lineId, boxId, playerName, activeName, opponentName) => {
         const nameElem = document.getElementById(nameId);
-        if (!nameElem) return;
+        if (!nameElem || !playerName || playerName === "N/A") return;
 
         nameElem.innerText = playerName;
         document.getElementById(lineId).innerHTML = buildStatsHTML(playerName, opponentName);
@@ -338,9 +370,9 @@ function updatePitcherStats() {
     };
 
     setBox('stat-red1-name', 'stat-red1-line', 'box-red-p1', pitchers.redP1, pitchers.redActive, pitchers.blueP1);
-    setBox('stat-red2-name', 'stat-red2-line', 'box-red-p2', pitchers.redP2, pitchers.redActive, pitchers.blueP2);
+    if (!is1v1) setBox('stat-red2-name', 'stat-red2-line', 'box-red-p2', pitchers.redP2, pitchers.redActive, pitchers.blueP2);
     setBox('stat-blue1-name', 'stat-blue1-line', 'box-blue-p1', pitchers.blueP1, pitchers.blueActive, pitchers.redP1);
-    setBox('stat-blue2-name', 'stat-blue2-line', 'box-blue-p2', pitchers.blueP2, pitchers.blueActive, pitchers.redP2);
+    if (!is1v1) setBox('stat-blue2-name', 'stat-blue2-line', 'box-blue-p2', pitchers.blueP2, pitchers.blueActive, pitchers.redP2);
 }
 
 function lockSetupInputs() {
@@ -349,6 +381,7 @@ function lockSetupInputs() {
     document.getElementById('redP2Select').disabled = true;
     document.getElementById('blueP2Select').disabled = true;
     document.getElementById('practiceToggle').disabled = true;
+    document.getElementById('oneVsOneToggle').disabled = true;
 }
 
 function renderSelectors(team, stateObj, boardContainerId, holeContainerId) {
