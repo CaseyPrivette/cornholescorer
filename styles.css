@@ -492,3 +492,12 @@ tr.clickable-row:hover { background-color: #f1f1f1; }
     font-size: 16px; 
     margin-bottom: 15px; 
 }
+
+.stat-line {
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+    color: #333;
+}
+.stat-line strong {
+    color: #111;
+}

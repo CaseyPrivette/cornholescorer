@@ -233,36 +233,67 @@ function updateMatchupBanner() {
 }
 
 function updatePitcherStats() {
+    const isPractice = document.getElementById('practiceToggle').checked;
     const pitchers = getActivePitchers(currentInning);
     const players = [pitchers.redP1, pitchers.redP2, pitchers.blueP1, pitchers.blueP2];
 
     let statsMap = {};
     players.forEach(p => {
         if (p !== "N/A") {
-            statsMap[p] = { board: 0, hole: 0, pts: 0 };
+            statsMap[p] = { board: 0, hole: 0, missed: 0, pts: 0, innings: 0 };
         }
     });
 
     inningsHistory.forEach(item => {
         if (statsMap[item.redPitcher]) {
+            let m = 4 - (item.rB + item.rH);
             statsMap[item.redPitcher].board += item.rB;
             statsMap[item.redPitcher].hole += item.rH;
+            statsMap[item.redPitcher].missed += m;
             statsMap[item.redPitcher].pts += (item.rB * 1) + (item.rH * 3);
+            statsMap[item.redPitcher].innings += 1;
         }
         if (statsMap[item.bluePitcher]) {
+            let m = 4 - (item.bB + item.bH);
             statsMap[item.bluePitcher].board += item.bB;
             statsMap[item.bluePitcher].hole += item.bH;
+            statsMap[item.bluePitcher].missed += m;
             statsMap[item.bluePitcher].pts += (item.bB * 1) + (item.bH * 3);
+            statsMap[item.bluePitcher].innings += 1;
         }
     });
 
-    const setBox = (nameId, lineId, boxId, playerName, activeName) => {
+    // Helper for formatting player card HTML
+    const buildStatsHTML = (playerName, opponentName) => {
+        const s = statsMap[playerName] || { board: 0, hole: 0, missed: 0, pts: 0, innings: 0 };
+        const oppS = statsMap[opponentName] || { pts: 0 };
+
+        const totalBags = s.innings * 4;
+        const bPct = totalBags > 0 ? ((s.board / totalBags) * 100).toFixed(1) : "0.0";
+        const hPct = totalBags > 0 ? ((s.hole / totalBags) * 100).toFixed(1) : "0.0";
+        const mPct = totalBags > 0 ? ((s.missed / totalBags) * 100).toFixed(1) : "0.0";
+
+        let diffText = "";
+        if (!isPractice && opponentName !== "N/A") {
+            let diff = s.pts - oppS.pts;
+            let formattedDiff = diff > 0 ? `+${diff}` : `${diff}`;
+            diffText = ` (${formattedDiff})`;
+        }
+
+        return `
+            <div class="stat-line"><strong>Total Pts:</strong> ${s.pts}${diffText}</div>
+            <div class="stat-line"><strong>Board:</strong> ${s.board} (${bPct}%)</div>
+            <div class="stat-line"><strong>Hole:</strong> ${s.hole} (${hPct}%)</div>
+            <div class="stat-line"><strong>Missed:</strong> ${s.missed} (${mPct}%)</div>
+        `;
+    };
+
+    const setBox = (nameId, lineId, boxId, playerName, activeName, opponentName) => {
         const nameElem = document.getElementById(nameId);
         if (!nameElem) return;
 
         nameElem.innerText = playerName;
-        const s = statsMap[playerName] || { pts: 0, board: 0, hole: 0 };
-        document.getElementById(lineId).innerText = `${s.pts} pts (${s.board}B / ${s.hole}H)`;
+        document.getElementById(lineId).innerHTML = buildStatsHTML(playerName, opponentName);
 
         const boxElem = document.getElementById(boxId);
         if (playerName === activeName) {
@@ -272,10 +303,10 @@ function updatePitcherStats() {
         }
     };
 
-    setBox('stat-red1-name', 'stat-red1-line', 'box-red-p1', pitchers.redP1, pitchers.redActive);
-    setBox('stat-red2-name', 'stat-red2-line', 'box-red-p2', pitchers.redP2, pitchers.redActive);
-    setBox('stat-blue1-name', 'stat-blue1-line', 'box-blue-p1', pitchers.blueP1, pitchers.blueActive);
-    setBox('stat-blue2-name', 'stat-blue2-line', 'box-blue-p2', pitchers.blueP2, pitchers.blueActive);
+    setBox('stat-red1-name', 'stat-red1-line', 'box-red-p1', pitchers.redP1, pitchers.redActive, pitchers.blueP1);
+    setBox('stat-red2-name', 'stat-red2-line', 'box-red-p2', pitchers.redP2, pitchers.redActive, pitchers.blueP2);
+    setBox('stat-blue1-name', 'stat-blue1-line', 'box-blue-p1', pitchers.blueP1, pitchers.blueActive, pitchers.redP1);
+    setBox('stat-blue2-name', 'stat-blue2-line', 'box-blue-p2', pitchers.blueP2, pitchers.blueActive, pitchers.redP2);
 }
 
 function lockSetupInputs() {
@@ -338,31 +369,6 @@ function getPlayerCumulativeScore(playerName, targetInning) {
         }
     });
     return total;
-}
-
-function getRunningTotalsUpTo(targetInning) {
-    const isPractice = document.getElementById('practiceToggle').checked;
-    let redTotal = 0;
-    let blueTotal = 0;
-
-    inningsHistory.forEach(item => {
-        if (item.inn <= targetInning) {
-            let rPts = (item.rB * 1) + (item.rH * 3);
-            let bPts = (item.bB * 1) + (item.bH * 3);
-
-            if (isPractice) {
-                redTotal += rPts;
-            } else {
-                if (rPts > bPts) {
-                    redTotal += (rPts - bPts);
-                } else if (bPts > rPts) {
-                    blueTotal += (bPts - rPts);
-                }
-            }
-        }
-    });
-
-    return { redTotal, blueTotal };
 }
 
 function calculateInning() {
@@ -445,7 +451,7 @@ function recalculateGame() {
         // Column 1: Red Pitcher Name
         row.insertCell(1).innerText = item.redPitcher;
 
-        // Column 2: Red Points (Color Coded)
+        // Column 2: Red Points
         let redPtsCell = row.insertCell(2);
         redPtsCell.innerText = rPts;
         redPtsCell.className = "red-pts-cell";
@@ -454,7 +460,7 @@ function recalculateGame() {
             // Column 3: Blue Pitcher Name
             row.insertCell(3).innerText = item.bluePitcher;
 
-            // Column 4: Blue Points (Color Coded)
+            // Column 4: Blue Points
             let bluePtsCell = row.insertCell(4);
             bluePtsCell.innerText = bPts;
             bluePtsCell.className = "blue-pts-cell";
