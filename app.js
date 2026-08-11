@@ -61,6 +61,7 @@ function handlePracticeModeToggle() {
     const boxRedP2 = document.getElementById('box-red-p2');
     const redStatHeader = document.getElementById('red-stat-header');
 
+    const thRedPts = document.getElementById('th-red-pts');
     const thBlueP = document.getElementById('th-blue-p');
     const thBluePts = document.getElementById('th-blue-pts');
     const thInnScore = document.getElementById('th-inn-score');
@@ -85,6 +86,7 @@ function handlePracticeModeToggle() {
         boxRedP2.style.display = 'none';
         redStatHeader.innerText = "Player Stats";
 
+        thRedPts.innerText = "Points";
         thBlueP.style.display = 'none';
         thBluePts.style.display = 'none';
         thInnScore.style.display = 'none';
@@ -108,6 +110,7 @@ function handlePracticeModeToggle() {
         boxRedP2.style.display = 'block';
         redStatHeader.innerText = "Red Team";
 
+        thRedPts.innerText = "Red Pts";
         thBlueP.style.display = '';
         thBluePts.style.display = '';
         thInnScore.style.display = '';
@@ -263,7 +266,6 @@ function updatePitcherStats() {
         }
     });
 
-    // Helper for formatting player card HTML
     const buildStatsHTML = (playerName, opponentName) => {
         const s = statsMap[playerName] || { board: 0, hole: 0, missed: 0, pts: 0, innings: 0 };
         const oppS = statsMap[opponentName] || { pts: 0 };
@@ -445,45 +447,34 @@ function recalculateGame() {
         row.className = "clickable-row";
         row.onclick = () => openEditModal(index);
 
-        // Column 0: Inning Number
         row.insertCell(0).innerText = item.inn;
-
-        // Column 1: Red Pitcher Name
         row.insertCell(1).innerText = item.redPitcher;
 
-        // Column 2: Red Points
         let redPtsCell = row.insertCell(2);
         redPtsCell.innerText = rPts;
         redPtsCell.className = "red-pts-cell";
 
         if (!isPractice) {
-            // Column 3: Blue Pitcher Name
             row.insertCell(3).innerText = item.bluePitcher;
 
-            // Column 4: Blue Points
             let bluePtsCell = row.insertCell(4);
             bluePtsCell.innerText = bPts;
             bluePtsCell.className = "blue-pts-cell";
 
-            // Column 5: Inning Score
             let innScoreCell = row.insertCell(5);
             innScoreCell.innerText = innScoreText;
             innScoreCell.className = `inn-score-cell ${innScoreClass}`;
 
-            // Column 6: Match Score
             let matchScoreCell = row.insertCell(6);
             matchScoreCell.className = "match-score-cell";
             matchScoreCell.innerHTML = `<span class="match-score-red">${totalRed}</span> - <span class="match-score-blue">${totalBlue}</span>`;
 
-            // Column 7: Action Link
             row.insertCell(7).innerHTML = `<span class="edit-action-link">Edit</span>`;
         } else {
-            // Column 3: Practice Total Score
             let matchScoreCell = row.insertCell(3);
             matchScoreCell.className = "match-score-cell";
             matchScoreCell.innerHTML = `<span class="match-score-red">${totalRed}</span>`;
 
-            // Column 4: Action Link
             row.insertCell(4).innerHTML = `<span class="edit-action-link">Edit</span>`;
         }
     });
