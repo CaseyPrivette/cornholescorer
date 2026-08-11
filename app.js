@@ -3,6 +3,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxecJjJPboMkAWxldzcU
 
 // MATCH STATE
 let gameState = {
+    gameNumber: null,
     mode: '2v2',
     currentInning: 1,
     redScore: 0,
@@ -20,7 +21,8 @@ let gameState = {
         blueBoard: 0,
         blueHole: 0
     },
-    history: []
+    history: [],
+    detailedPlayerLogs: [] // Detailed rows for Google Sheets logging
 };
 
 // INITIALIZATION
@@ -104,7 +106,6 @@ function populateRosterDropdowns() {
             select.appendChild(opt);
         });
 
-        // Maintain selection or assign staggered defaults across dropdowns
         if (currentValue && gameState.roster.includes(currentValue)) {
             select.value = currentValue;
         } else if (gameState.roster[index]) {
@@ -129,14 +130,14 @@ function addPlayerToSheet() {
             gameState.roster = data.roster;
             populateRosterDropdowns();
             if (input) input.value = '';
-            alert(`Player "${name}" successfully added to Google Sheets roster!`);
+            alert(`Player "${name}" added to Google Sheets roster!`);
         }
     })
-    .catch(err => alert('Failed to add player to sheet: ' + err));
+    .catch(err => alert('Failed to add player: ' + err));
 }
 
 function saveMatchToSheet() {
-    if (gameState.history.length === 0) {
+    if (gameState.detailedPlayerLogs.length === 0) {
         alert('No innings recorded yet to save!');
         return;
     }
@@ -149,12 +150,12 @@ function saveMatchToSheet() {
     .then(res => res.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('Match log successfully saved to Google Sheets!');
+            alert(`Match log saved to Google Sheets! (Game #${data.gameNumber})`);
         } else {
             alert('Error saving match: ' + data.message);
         }
     })
-    .catch(err => alert('Save to Google Sheets failed: ' + err));
+    .catch(err => alert('Save failed: ' + err));
 }
 
 // ============================================================================
@@ -225,7 +226,7 @@ function applyConstraints(boardContainerId, holeContainerId, currentBoard, curre
 }
 
 // ============================================================================
-// MATCH LOGIC & INNING PROCESSING
+// MATCH LOGIC & INNING SUBMISSION
 // ============================================================================
 
 function startMatch() {
@@ -238,6 +239,7 @@ function startMatch() {
     gameState.redScore = 0;
     gameState.blueScore = 0;
     gameState.history = [];
+    gameState.detailedPlayerLogs = [];
 
     Object.keys(gameState.players).forEach(p => {
         gameState.players[p].totalPts = 0;
@@ -251,7 +253,6 @@ function startMatch() {
     renderLogTable();
     renderStatsTab();
 
-    // Auto-switch to scoring tab
     const scoreTabBtn = document.querySelectorAll('.tab-btn')[1];
     if (scoreTabBtn) scoreTabBtn.click();
 }
@@ -286,19 +287,22 @@ function updatePitcherLabels() {
 }
 
 function submitInning() {
+    const isPractice = gameState.mode === 'practice';
     const redBoard = gameState.currentInputs.redBoard;
     const redHole = gameState.currentInputs.redHole;
-    const blueBoard = gameState.mode === 'practice' ? 0 : gameState.currentInputs.blueBoard;
-    const blueHole = gameState.mode === 'practice' ? 0 : gameState.currentInputs.blueHole;
-
+    const redMissed = 4 - (redBoard + redHole);
     const redGross = redBoard + (redHole * 3);
+
+    const blueBoard = isPractice ? 0 : gameState.currentInputs.blueBoard;
+    const blueHole = isPractice ? 0 : gameState.currentInputs.blueHole;
+    const blueMissed = isPractice ? 0 : 4 - (blueBoard + blueHole);
     const blueGross = blueBoard + (blueHole * 3);
 
     let redNet = 0;
     let blueNet = 0;
     let netText = '0';
 
-    if (gameState.mode === 'practice') {
+    if (isPractice) {
         redNet = redGross;
         gameState.redScore += redNet;
         netText = `+${redNet}`;
@@ -317,24 +321,55 @@ function submitInning() {
     }
 
     const redPitcherKey = getActivePitcherKey('red');
+    const redPlayerName = gameState.players[redPitcherKey].name;
+    
     gameState.players[redPitcherKey].totalPts += redGross;
     gameState.players[redPitcherKey].inningsCount += 1;
     gameState.players[redPitcherKey].totalBoards += redBoard;
     gameState.players[redPitcherKey].totalHoles += redHole;
 
-    if (gameState.mode !== 'practice') {
+    // Push Red Player log
+    gameState.detailedPlayerLogs.push({
+        inning: gameState.currentInning,
+        team: 'Red',
+        playerName: redPlayerName,
+        board: redBoard,
+        hole: redHole,
+        missed: redMissed,
+        inningScore: redGross,
+        runningScore: gameState.redScore,
+        isPractice: isPractice
+    });
+
+    let bluePlayerName = '-';
+    if (!isPractice) {
         const bluePitcherKey = getActivePitcherKey('blue');
+        bluePlayerName = gameState.players[bluePitcherKey].name;
+
         gameState.players[bluePitcherKey].totalPts += blueGross;
         gameState.players[bluePitcherKey].inningsCount += 1;
         gameState.players[bluePitcherKey].totalBoards += blueBoard;
         gameState.players[bluePitcherKey].totalHoles += blueHole;
+
+        // Push Blue Player log
+        gameState.detailedPlayerLogs.push({
+            inning: gameState.currentInning,
+            team: 'Blue',
+            playerName: bluePlayerName,
+            board: blueBoard,
+            hole: blueHole,
+            missed: blueMissed,
+            inningScore: blueGross,
+            runningScore: gameState.blueScore,
+            isPractice: false
+        });
     }
 
     gameState.history.push({
         inning: gameState.currentInning,
-        redPitcher: gameState.players[redPitcherKey].name,
+        redPitcher: redPlayerName,
         redGross,
-        bluePitcher: gameState.mode === 'practice' ? '-' : gameState.players[getActivePitcherKey('blue')].name,
+        bluePitcher: bluePlayerName,
         blueGross,
         netText,
         matchScore: `${gameState.redScore} - ${gameState.blueScore}`
