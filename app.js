@@ -15,11 +15,11 @@ let modalScores = {
     blue: { board: 0, hole: 0 }
 };
 
-// Initialize Application when DOM Content is Loaded
+// Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
     initGame();
 
-    // Attach Event Listeners
+    // Event Bindings
     document.getElementById('btnAddPlayer').addEventListener('click', openAddPlayerModal);
     document.getElementById('btnCancelAddPlayer').addEventListener('click', closeAddPlayerModal);
     document.getElementById('btnSubmitAddPlayer').addEventListener('click', submitNewPlayer);
