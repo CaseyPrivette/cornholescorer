@@ -15,9 +15,9 @@ let modalScores = {
     blue: { board: 0, hole: 0 }
 };
 
-// Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
     initGame();
+    setupTabListeners();
 
     // Event Bindings
     document.getElementById('btnAddPlayer').addEventListener('click', openAddPlayerModal);
@@ -27,11 +27,40 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('btnCancelEdit').addEventListener('click', closeEditModal);
     document.getElementById('btnSaveEdit').addEventListener('click', saveInningEdit);
     document.getElementById('practiceToggle').addEventListener('change', handlePracticeModeToggle);
+    document.getElementById('btnStartGameNav').addEventListener('click', () => switchTab('tab-scorekeeping'));
 
     ['redP1Select', 'blueP1Select', 'redP2Select', 'blueP2Select'].forEach(id => {
         document.getElementById(id).addEventListener('change', updateMatchupBanner);
     });
 });
+
+function setupTabListeners() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.getAttribute('data-tab');
+            switchTab(target);
+        });
+    });
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabId) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    document.querySelectorAll('.tab-content').forEach(content => {
+        if (content.id === tabId) {
+            content.classList.add('active');
+        } else {
+            content.classList.remove('active');
+        }
+    });
+}
 
 function initGame() {
     let storedGame = localStorage.getItem('cornholeGameNum');
@@ -55,6 +84,7 @@ function handlePracticeModeToggle() {
     const blueScoreBox = document.getElementById('blue-score-box');
     const redScoreLabel = document.getElementById('red-score-label');
     const blueTeamSection = document.getElementById('blue-team-section');
+    const quickScoreBanner = document.getElementById('quick-score-banner');
     
     const statsGrid = document.getElementById('stats-grid');
     const blueStatCol = document.getElementById('blue-stat-col');
@@ -78,6 +108,7 @@ function handlePracticeModeToggle() {
 
         blueScoreBox.style.display = 'none';
         redScoreLabel.innerText = "PRACTICE SCORE";
+        quickScoreBanner.style.display = 'none';
 
         blueTeamSection.style.display = 'none';
 
@@ -102,6 +133,7 @@ function handlePracticeModeToggle() {
 
         blueScoreBox.style.display = 'flex';
         redScoreLabel.innerText = "RED";
+        quickScoreBanner.style.display = 'block';
 
         blueTeamSection.style.display = 'block';
 
@@ -481,6 +513,9 @@ function recalculateGame() {
 
     document.getElementById('red-total').innerText = totalRed;
     document.getElementById('blue-total').innerText = totalBlue;
+    document.getElementById('banner-red-score').innerText = totalRed;
+    document.getElementById('banner-blue-score').innerText = totalBlue;
+    
     updatePitcherStats();
 
     if (!isPractice && (totalRed >= 21 || totalBlue >= 21)) {

@@ -1,4 +1,4 @@
-/* Modern CSS Reset & Box Sizing */
+/* Modern Reset */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -18,12 +18,12 @@ body {
     margin: 0 auto;
 }
 
-/* Header Section & Toggle Switches */
+/* Header & Quick Score */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     background: #ffffff;
     padding: 12px 16px;
     border-radius: 8px;
@@ -31,33 +31,80 @@ body {
 }
 
 .header h1 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     color: #222;
 }
 
-.toggle-container {
+.quick-score-banner {
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.qs-red { color: #d9534f; }
+.qs-blue { color: #0275d8; }
+.qs-divider { margin: 0 6px; color: #ccc; }
+
+/* Tab Navigation System */
+.tab-nav {
     display: flex;
-    gap: 16px;
-    align-items: center;
+    gap: 6px;
+    margin-bottom: 15px;
+    background: #e2e8f0;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.tab-btn.active {
+    background: #ffffff;
+    color: #1e293b;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Switches & Controls */
+.toggle-container-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 6px 0;
 }
 
 .switch-label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
+    gap: 10px;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: #444;
+    color: #334155;
     cursor: pointer;
     user-select: none;
 }
 
-/* Custom CSS Toggle Switches */
 .switch-label input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
-    width: 40px;
-    height: 22px;
+    width: 42px;
+    height: 24px;
     background-color: #cbd5e1;
     border-radius: 20px;
     position: relative;
@@ -75,8 +122,8 @@ body {
 .switch-label input[type="checkbox"]::before {
     content: "";
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     top: 3px;
     left: 3px;
@@ -89,7 +136,7 @@ body {
     transform: translateX(18px);
 }
 
-/* Card Containers */
+/* Cards & Layouts */
 .card {
     background: #ffffff;
     border-radius: 8px;
@@ -119,7 +166,6 @@ body {
     color: #333;
 }
 
-/* Setup Grid Layout */
 .setup-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -156,12 +202,6 @@ body {
     border-radius: 4px;
     font-size: 0.9rem;
     background-color: #fff;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: #0275d8;
-    box-shadow: 0 0 0 2px rgba(2,117,216,0.2);
 }
 
 /* Scoreboard Displays */
@@ -286,7 +326,7 @@ body {
 .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
 .btn-block { width: 100%; padding: 12px; font-size: 1rem; margin-top: 5px; }
 
-/* Player Statistics Cards Grid */
+/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
