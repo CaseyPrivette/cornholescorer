@@ -16,7 +16,7 @@ body {
     margin: 0 auto;
 }
 
-/* Header & Toggles */
+/* Header & Toggle Controls */
 .header {
     display: flex;
     justify-content: space-between;
@@ -30,11 +30,47 @@ body {
 }
 
 .switch-label {
-    display: flex;
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
+}
+
+/* Checkbox Toggle Switch Visuals */
+.switch-label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 36px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.switch-label input[type="checkbox"]:checked {
+    background-color: #28a745;
+}
+
+.switch-label input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    background-color: white;
+    transition: transform 0.2s;
+}
+
+.switch-label input[type="checkbox"]:checked::before {
+    transform: translateX(16px);
 }
 
 /* Card Containers */
@@ -290,13 +326,15 @@ body {
     font-size: 0.8rem;
 }
 
-/* Modals */
+/* Modal Windows - Hidden by Default */
 .modal {
-    display: none;
+    display: none; /* Crucial: Keeps popups hidden until opened */
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
+    top: 0; 
+    left: 0;
+    width: 100vw; 
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -308,6 +346,7 @@ body {
     border-radius: 8px;
     width: 90%;
     max-width: 450px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
 .modal-actions {
