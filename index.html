@@ -3,203 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- iPad Web App Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Cornhole Scorer">
-    
-    <title>Cornhole Scorer - Dynamic Roster</title>
+    <title>Cornhole Scorekeeper</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <h1>Cornhole Scorer</h1>
-    <div class="game-info">Game #<span id="display-game-num">1</span> | Inning: <span id="display-inn-num">1</span></div>
-
-    <!-- Global Toggles Bar -->
-    <div class="toggle-container">
-        <div class="toggle-bar">
-            <span class="toggle-label">PRACTICE MODE</span>
-            <label class="switch">
-                <input type="checkbox" id="practiceToggle">
-                <span class="slider"></span>
-            </label>
-        </div>
-        <div class="toggle-bar">
-            <span class="toggle-label">LIVE GOOGLE SHEETS LOGGING</span>
-            <label class="switch">
-                <input type="checkbox" id="loggingToggle" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
-    </div>
-
-    <div class="settings-card">
-        <div class="settings-header">
-            <h3>Player Setup</h3>
-            <button class="btn-add-player-link" id="btnAddPlayer">+ Add New Player</button>
-        </div>
-        
-        <div class="player-setup-grid" id="setup-grid">
-            <div class="matchup-box" id="matchup-box-1">
-                <div class="matchup-title" id="matchup-title-1">1st Inning Matchup</div>
-                <div class="input-group red-row">
-                    <label id="label-red-p1">Red Player 1</label>
-                    <select id="redP1Select"></select>
-                </div>
-                <div class="input-group blue-row" id="blue-p1-group">
-                    <label>Blue Player 1</label>
-                    <select id="blueP1Select"></select>
-                </div>
+    <div class="container">
+        <!-- Header Controls -->
+        <header class="header">
+            <h1>Game #<span id="display-game-num">1</span></h1>
+            <div class="toggle-container">
+                <label class="switch-label">
+                    <input type="checkbox" id="practiceToggle">
+                    <span class="slider"></span>
+                    Practice Mode
+                </label>
+                <label class="switch-label">
+                    <input type="checkbox" id="loggingToggle" checked>
+                    <span class="slider"></span>
+                    Log to Sheets
+                </label>
             </div>
+        </header>
 
-            <div class="matchup-box" id="matchup-box-2">
-                <div class="matchup-title">2nd Inning Matchup</div>
-                <div class="input-group red-row">
-                    <label>Red Player 2</label>
-                    <select id="redP2Select"></select>
-                </div>
-                <div class="input-group blue-row">
-                    <label>Blue Player 2</label>
-                    <select id="blueP2Select"></select>
-                </div>
+        <!-- Player Setup Section -->
+        <section class="card">
+            <div class="card-header">
+                <h2>Player Setup</h2>
+                <button id="btnAddPlayer" class="btn btn-secondary btn-sm">+ Add Player</button>
             </div>
-        </div>
-    </div>
-    
-    <div class="scoreboard" id="scoreboard">
-        <div class="score-box red-score" id="red-score-box">
-            <span class="score-label" id="red-score-label">RED</span>
-            <span class="score-num" id="red-total">0</span>
-        </div>
-        <div class="score-box blue-score" id="blue-score-box">
-            <span class="score-label">BLUE</span>
-            <span class="score-num" id="blue-total">0</span>
-        </div>
-    </div>
-
-    <div class="team-section red-team" id="red-team-section">
-        <strong class="pitcher-title" id="red-pitcher-label">RED PITCHER</strong>
-        <div class="field-group">
-            <div class="field-label">Board (1 pt)</div>
-            <div class="box-selector" id="red-board-boxes"></div>
-        </div>
-        <div class="field-group">
-            <div class="field-label">Hole (3 pts)</div>
-            <div class="box-selector" id="red-hole-boxes"></div>
-        </div>
-    </div>
-
-    <div class="team-section blue-team" id="blue-team-section">
-        <strong class="pitcher-title" id="blue-pitcher-label">BLUE PITCHER</strong>
-        <div class="field-group">
-            <div class="field-label">Board (1 pt)</div>
-            <div class="box-selector" id="blue-board-boxes"></div>
-        </div>
-        <div class="field-group">
-            <div class="field-label">Hole (3 pts)</div>
-            <div class="box-selector" id="blue-hole-boxes"></div>
-        </div>
-    </div>
-
-    <button class="submit-btn" id="btnEndInning">End Inning</button>
-
-    <!-- 4-Player Stats Section -->
-    <div class="pitcher-stats-card" id="stats-card">
-        <div class="stats-card-title">Game Statistics</div>
-        <div class="stats-grid" id="stats-grid">
-            <!-- Red Team Column -->
-            <div class="stat-team-column" id="red-stat-col">
-                <div class="stat-team-header red-header-text" id="red-stat-header">Red Team</div>
-                <div class="stat-player-box red-stat" id="box-red-p1">
-                    <div class="stat-pitcher-name" id="stat-red1-name">Red Player 1</div>
-                    <div class="stat-line" id="stat-red1-line">0 pts (0 B / 0 H)</div>
-                </div>
-                <div class="stat-player-box red-stat" id="box-red-p2">
-                    <div class="stat-pitcher-name" id="stat-red2-name">Red Player 2</div>
-                    <div class="stat-line" id="stat-red2-line">0 pts (0 B / 0 H)</div>
-                </div>
-            </div>
-
-            <!-- Blue Team Column -->
-            <div class="stat-team-column" id="blue-stat-col">
-                <div class="stat-team-header blue-header-text">Blue Team</div>
-                <div class="stat-player-box blue-stat" id="box-blue-p1">
-                    <div class="stat-pitcher-name" id="stat-blue1-name">Blue Player 1</div>
-                    <div class="stat-line" id="stat-blue1-line">0 pts (0 B / 0 H)</div>
-                </div>
-                <div class="stat-player-box blue-stat" id="box-blue-p2">
-                    <div class="stat-pitcher-name" id="stat-blue2-name">Blue Player 2</div>
-                    <div class="stat-line" id="stat-blue2-line">0 pts (0 B / 0 H)</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="log-container">
-        <table id="log">
-            <thead>
-                <tr id="log-header-row">
-                    <th>Inn</th>
-                    <th class="red-header" id="th-red-p">Red Pitcher</th>
-                    <th class="red-header" id="th-red-pts">Pts</th>
-                    <th class="blue-header" id="th-blue-p">Blue Pitcher</th>
-                    <th class="blue-header" id="th-blue-pts">Pts</th>
-                    <th id="th-inn-score">Inning Score</th>
-                    <th id="th-match-score">Match Score</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="log-body"></tbody>
-        </table>
-        <div class="edit-hint">Tap any row to edit past inning scores</div>
-    </div>
-
-    <!-- Modal: Edit Inning -->
-    <div class="modal-overlay" id="editModal">
-        <div class="modal-content">
-            <div class="modal-header">Edit Inning <span id="edit-inn-num">1</span></div>
             
-            <div class="modal-team red-team" id="modal-red-team">
-                <strong class="pitcher-title modal-pitcher-title" id="modal-red-pitcher-label">RED PITCHER</strong>
-                <div class="field-group">
-                    <div class="field-label">Board (1 pt)</div>
-                    <div class="box-selector" id="modal-red-board-boxes"></div>
+            <div id="setup-grid" class="setup-grid">
+                <!-- Red Team Matchup Setup -->
+                <div class="setup-box">
+                    <h3 id="matchup-title-1">1st Inning Matchup</h3>
+                    <div class="form-group">
+                        <label id="label-red-p1" for="redP1Select">Red Player 1</label>
+                        <select id="redP1Select" class="form-control"></select>
+                    </div>
+                    <div class="form-group" id="blue-p1-group">
+                        <label for="blueP1Select">Blue Player 1</label>
+                        <select id="blueP1Select" class="form-control"></select>
+                    </div>
                 </div>
-                <div class="field-group">
-                    <div class="field-label">Hole (3 pts)</div>
-                    <div class="box-selector" id="modal-red-hole-boxes"></div>
+
+                <!-- 2nd Inning Matchup Setup -->
+                <div class="setup-box" id="matchup-box-2">
+                    <h3>2nd Inning Matchup</h3>
+                    <div class="form-group">
+                        <label for="redP2Select">Red Player 2</label>
+                        <select id="redP2Select" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="blueP2Select">Blue Player 2</label>
+                        <select id="blueP2Select" class="form-control"></select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scoreboard Header -->
+        <section class="scoreboard">
+            <div class="score-box red-bg">
+                <span id="red-score-label" class="team-label">RED</span>
+                <span id="red-total" class="team-score">0</span>
+            </div>
+            <div class="score-box blue-bg" id="blue-score-box">
+                <span class="team-label">BLUE</span>
+                <span id="blue-total" class="team-score">0</span>
+            </div>
+        </section>
+
+        <!-- Current Inning Input Controls -->
+        <section class="card">
+            <h2>Inning <span id="display-inn-num">1</span> Throw Input</h2>
+
+            <!-- Red / Practice Pitcher Throw Selection -->
+            <div class="team-input-section red-border">
+                <h3 id="red-pitcher-label">RED: PLAYER NAME</h3>
+                
+                <div class="selector-row">
+                    <label>Board (1pt):</label>
+                    <div id="red-board-boxes" class="btn-box-group"></div>
+                </div>
+                <div class="selector-row">
+                    <label>Hole (3pt):</label>
+                    <div id="red-hole-boxes" class="btn-box-group"></div>
                 </div>
             </div>
 
-            <div class="modal-team blue-team" id="modal-blue-team">
-                <strong class="pitcher-title modal-pitcher-title" id="modal-blue-pitcher-label">BLUE PITCHER</strong>
-                <div class="field-group">
-                    <div class="field-label">Board (1 pt)</div>
-                    <div class="box-selector" id="modal-blue-board-boxes"></div>
+            <!-- Blue Pitcher Throw Selection -->
+            <div class="team-input-section blue-border" id="blue-team-section">
+                <h3 id="blue-pitcher-label">BLUE: PLAYER NAME</h3>
+                
+                <div class="selector-row">
+                    <label>Board (1pt):</label>
+                    <div id="blue-board-boxes" class="btn-box-group"></div>
                 </div>
-                <div class="field-group">
-                    <div class="field-label">Hole (3 pts)</div>
-                    <div class="box-selector" id="modal-blue-hole-boxes"></div>
+                <div class="selector-row">
+                    <label>Hole (3pt):</label>
+                    <div id="blue-hole-boxes" class="btn-box-group"></div>
                 </div>
             </div>
 
-            <div class="modal-actions">
-                <button class="btn-cancel" id="btnCancelEdit">Cancel</button>
-                <button class="btn-save" id="btnSaveEdit">Save Edit</button>
+            <button id="btnEndInning" class="btn btn-primary btn-block">Submit Inning</button>
+        </section>
+
+        <!-- Individual Player Stats Cards -->
+        <section class="card">
+            <h2>Player Statistics</h2>
+            <div id="stats-grid" class="stats-grid">
+                
+                <!-- Red Team Stats Column -->
+                <div class="stats-column">
+                    <h3 id="red-stat-header">Red Team</h3>
+                    
+                    <div id="box-red-p1" class="player-stat-card">
+                        <div id="stat-red1-name" class="player-name">Red Player 1</div>
+                        <div id="stat-red1-line" class="player-stats-body"></div>
+                    </div>
+
+                    <div id="box-red-p2" class="player-stat-card">
+                        <div id="stat-red2-name" class="player-name">Red Player 2</div>
+                        <div id="stat-red2-line" class="player-stats-body"></div>
+                    </div>
+                </div>
+
+                <!-- Blue Team Stats Column -->
+                <div class="stats-column" id="blue-stat-col">
+                    <h3>Blue Team</h3>
+                    
+                    <div id="box-blue-p1" class="player-stat-card">
+                        <div id="stat-blue1-name" class="player-name">Blue Player 1</div>
+                        <div id="stat-blue1-line" class="player-stats-body"></div>
+                    </div>
+
+                    <div id="box-blue-p2" class="player-stat-card">
+                        <div id="stat-blue2-name" class="player-name">Blue Player 2</div>
+                        <div id="stat-blue2-line" class="player-stats-body"></div>
+                    </div>
+                </div>
+
             </div>
-        </div>
+        </section>
+
+        <!-- Inning Log Table -->
+        <section class="card">
+            <h2>Inning Log</h2>
+            <div class="table-responsive">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Inn</th>
+                            <th>Red Player</th>
+                            <th id="th-red-pts">Red Pts</th>
+                            <th id="th-blue-p">Blue Player</th>
+                            <th id="th-blue-pts">Blue Pts</th>
+                            <th id="th-inn-score">Inning Score</th>
+                            <th id="th-match-score">Match Score</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body">
+                        <!-- Dynamically Generated Inning Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
     <!-- Modal: Add New Player -->
-    <div class="modal-overlay" id="addPlayerModal">
+    <div id="addPlayerModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">Add New Player</div>
-            <input type="text" id="newPlayerNameInput" class="modal-input" placeholder="Enter player name...">
+            <h3>Add New Player</h3>
+            <input type="text" id="newPlayerNameInput" class="form-control" placeholder="Enter player name">
             <div class="modal-actions">
-                <button class="btn-cancel" id="btnCancelAddPlayer">Cancel</button>
-                <button class="btn-save" id="btnSubmitAddPlayer">Save to Roster</button>
+                <button id="btnCancelAddPlayer" class="btn btn-secondary">Cancel</button>
+                <button id="btnSubmitAddPlayer" class="btn btn-primary">Add Player</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Past Inning -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Inning <span id="edit-inn-num"></span></h3>
+            
+            <div class="team-input-section red-border">
+                <h4 id="modal-red-pitcher-label">RED PLAYER</h4>
+                <div class="selector-row">
+                    <label>Board:</label>
+                    <div id="modal-red-board-boxes" class="btn-box-group"></div>
+                </div>
+                <div class="selector-row">
+                    <label>Hole:</label>
+                    <div id="modal-red-hole-boxes" class="btn-box-group"></div>
+                </div>
+            </div>
+
+            <div class="team-input-section blue-border" id="modal-blue-team">
+                <h4 id="modal-blue-pitcher-label">BLUE PLAYER</h4>
+                <div class="selector-row">
+                    <label>Board:</label>
+                    <div id="modal-blue-board-boxes" class="btn-box-group"></div>
+                </div>
+                <div class="selector-row">
+                    <label>Hole:</label>
+                    <div id="modal-blue-hole-boxes" class="btn-box-group"></div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="btnCancelEdit" class="btn btn-secondary">Cancel</button>
+                <button id="btnSaveEdit" class="btn btn-primary">Save Changes</button>
             </div>
         </div>
     </div>
