@@ -37,30 +37,34 @@
                     </select>
                 </div>
 
-                <div class="team-setup-grid">
-                    <!-- Red Team Roster Selection -->
-                    <div class="team-config red-border-left">
-                        <h3>Red Team</h3>
-                        <div class="form-group">
-                            <label for="red-player-1">Player 1 (Pitcher A)</label>
-                            <select id="red-player-1" class="roster-select"></select>
-                        </div>
-                        <div class="form-group" id="red-p2-group">
-                            <label for="red-player-2">Player 2 (Pitcher B)</label>
-                            <select id="red-player-2" class="roster-select"></select>
+                <div class="setup-section">
+                    <!-- Board 1 Setup -->
+                    <div class="board-setup-card">
+                        <h3>Board 1</h3>
+                        <div class="player-side-inputs">
+                            <div class="input-group">
+                                <label for="blue-player-1">Board 1 Left (Blue)</label>
+                                <input type="text" id="blue-player-1" value="Blue P1" placeholder="Enter Blue P1 Name">
+                            </div>
+                            <div class="input-group">
+                                <label for="red-player-1">Board 1 Right (Red)</label>
+                                <input type="text" id="red-player-1" value="Red P1" placeholder="Enter Red P1 Name">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Blue Team Roster Selection -->
-                    <div class="team-config blue-border-left" id="blue-setup-section">
-                        <h3>Blue Team</h3>
-                        <div class="form-group">
-                            <label for="blue-player-1">Player 1 (Pitcher A)</label>
-                            <select id="blue-player-1" class="roster-select"></select>
-                        </div>
-                        <div class="form-group" id="blue-p2-group">
-                            <label for="blue-player-2">Player 2 (Pitcher B)</label>
-                            <select id="blue-player-2" class="roster-select"></select>
+                    <!-- Board 2 Setup -->
+                    <div class="board-setup-card">
+                        <h3>Board 2</h3>
+                        <div class="player-side-inputs">
+                            <div class="input-group">
+                                <label for="blue-player-2">Board 2 Left (Blue)</label>
+                                <input type="text" id="blue-player-2" value="Blue P2" placeholder="Enter Blue P2 Name">
+                            </div>
+                            <div class="input-group">
+                                <label for="red-player-2">Board 2 Right (Red)</label>
+                                <input type="text" id="red-player-2" value="Red P2" placeholder="Enter Red P2 Name">
+                            </div>
                         </div>
                     </div>
                 </div>

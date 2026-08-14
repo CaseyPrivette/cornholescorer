@@ -263,11 +263,19 @@ function applyConstraints(boardContainerId, holeContainerId, currentBoard, curre
 // MATCH LOGIC & INNING SUBMISSION
 // ============================================================================
 
+// Initialize player setup and assign explicit board sides
 function startMatch() {
-    gameState.players.red1.name = document.getElementById('red-player-1')?.value || 'Red P1';
-    gameState.players.red2.name = document.getElementById('red-player-2')?.value || 'Red P2';
     gameState.players.blue1.name = document.getElementById('blue-player-1')?.value || 'Blue P1';
+    gameState.players.blue1.side = 'Left';
+
+    gameState.players.red1.name = document.getElementById('red-player-1')?.value || 'Red P1';
+    gameState.players.red1.side = 'Right';
+
     gameState.players.blue2.name = document.getElementById('blue-player-2')?.value || 'Blue P2';
+    gameState.players.blue2.side = 'Left';
+
+    gameState.players.red2.name = document.getElementById('red-player-2')?.value || 'Red P2';
+    gameState.players.red2.side = 'Right';
 
     gameState.currentInning = 1;
     gameState.redScore = 0;
@@ -275,7 +283,6 @@ function startMatch() {
     gameState.history = [];
     gameState.detailedPlayerLogs = [];
 
-    // Re-enable submit button for new game
     const submitBtn = document.getElementById('btnEndInning');
     if (submitBtn) {
         submitBtn.disabled = false;
@@ -327,6 +334,7 @@ function updatePitcherLabels() {
     if (innLabel) innLabel.textContent = gameState.currentInning;
 }
 
+// Log side information alongside detailed player logs
 function submitInning() {
     const isPractice = gameState.mode === 'practice';
     const redBoard = gameState.currentInputs.redBoard;
@@ -361,18 +369,20 @@ function submitInning() {
         }
     }
 
+    // Red Pitcher Logging
     const redPitcherKey = getActivePitcherKey('red');
-    const redPlayerName = gameState.players[redPitcherKey].name;
+    const redPlayer = gameState.players[redPitcherKey];
     
-    gameState.players[redPitcherKey].totalPts += redGross;
-    gameState.players[redPitcherKey].inningsCount += 1;
-    gameState.players[redPitcherKey].totalBoards += redBoard;
-    gameState.players[redPitcherKey].totalHoles += redHole;
+    redPlayer.totalPts += redGross;
+    redPlayer.inningsCount += 1;
+    redPlayer.totalBoards += redBoard;
+    redPlayer.totalHoles += redHole;
 
     gameState.detailedPlayerLogs.push({
         inning: gameState.currentInning,
         team: 'Red',
-        playerName: redPlayerName,
+        playerName: redPlayer.name,
+        side: redPlayer.side, // 'Right'
         board: redBoard,
         hole: redHole,
         missed: redMissed,
@@ -381,20 +391,21 @@ function submitInning() {
         isPractice: isPractice
     });
 
-    let bluePlayerName = '-';
+    // Blue Pitcher Logging
     if (!isPractice) {
         const bluePitcherKey = getActivePitcherKey('blue');
-        bluePlayerName = gameState.players[bluePitcherKey].name;
+        const bluePlayer = gameState.players[bluePitcherKey];
 
-        gameState.players[bluePitcherKey].totalPts += blueGross;
-        gameState.players[bluePitcherKey].inningsCount += 1;
-        gameState.players[bluePitcherKey].totalBoards += blueBoard;
-        gameState.players[bluePitcherKey].totalHoles += blueHole;
+        bluePlayer.totalPts += blueGross;
+        bluePlayer.inningsCount += 1;
+        bluePlayer.totalBoards += blueBoard;
+        bluePlayer.totalHoles += blueHole;
 
         gameState.detailedPlayerLogs.push({
             inning: gameState.currentInning,
             team: 'Blue',
-            playerName: bluePlayerName,
+            playerName: bluePlayer.name,
+            side: bluePlayer.side, // 'Left'
             board: blueBoard,
             hole: blueHole,
             missed: blueMissed,
@@ -406,9 +417,9 @@ function submitInning() {
 
     gameState.history.push({
         inning: gameState.currentInning,
-        redPitcher: redPlayerName,
+        redPitcher: redPlayer.name,
         redGross,
-        bluePitcher: bluePlayerName,
+        bluePitcher: !isPractice ? gameState.players[getActivePitcherKey('blue')].name : '-',
         blueGross,
         netText,
         matchScore: `${gameState.redScore} - ${gameState.blueScore}`
@@ -422,7 +433,6 @@ function submitInning() {
     renderLogTable();
     renderStatsTab();
 
-    // Check if either team reached 21 points
     checkMatchCompletion();
 }
 
