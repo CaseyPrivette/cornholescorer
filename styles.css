@@ -580,3 +580,27 @@ select[id^="red"]:focus {
     border-color: #f87171;
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
 }
+
+/* BOARD STATS LAYOUT ENHANCEMENTS */
+.board-stats-header {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #334155;
+}
+
+.board-stats-header:first-child {
+    margin-top: 0;
+}
+
+.board-stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}

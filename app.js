@@ -105,7 +105,7 @@ function fetchRosterFromSheet() {
 
 // Fixed: Default parameter if playerList is missing
 function populateRosterDropdowns(playerList = gameState.roster) {
-    const selectIds = ['blue-player-1', 'red-player-1', 'blue-player-2', 'red-player-2'];
+    const selectIds = ['blue-player-1', 'red-player-1', 'red-player-2', 'blue-player-2'];
     
     selectIds.forEach((id, index) => {
         const select = document.getElementById(id);
@@ -289,11 +289,11 @@ function startMatch() {
     gameState.players.red1.name = getSelectedName('red-player-1', 'Red P1');
     gameState.players.red1.side = 'Right';
 
-    gameState.players.blue2.name = getSelectedName('blue-player-2', 'Blue P2');
-    gameState.players.blue2.side = 'Left';
-
     gameState.players.red2.name = getSelectedName('red-player-2', 'Red P2');
-    gameState.players.red2.side = 'Right';
+    gameState.players.red2.side = 'Left';
+
+    gameState.players.blue2.name = getSelectedName('blue-player-2', 'Blue P2');
+    gameState.players.blue2.side = 'Right';
 
     gameState.currentInning = 1;
     gameState.redScore = 0;
@@ -552,82 +552,102 @@ function renderStatsTab() {
     // Calculate individual net +/- totals based on direct inning matchups
     const netScores = calculatePlayerNetScores();
 
-    const activePlayers = [
-        { key: 'red1', team: 'Red', colorClass: 'red-team-card' }
+    // Group players logically by board
+    const boards = [
+        {
+            title: 'Board 1 Players',
+            players: [
+                { key: 'blue1', team: 'Blue', colorClass: 'blue-team-card' },
+                { key: 'red1', team: 'Red', colorClass: 'red-team-card' }
+            ]
+        }
     ];
 
     if (gameState.mode === '2v2') {
-        activePlayers.push({ key: 'red2', team: 'Red', colorClass: 'red-team-card' });
+        boards.push({
+            title: 'Board 2 Players',
+            players: [
+                { key: 'red2', team: 'Red', colorClass: 'red-team-card' },
+                { key: 'blue2', team: 'Blue', colorClass: 'blue-team-card' }
+            ]
+        });
     }
 
-    if (gameState.mode !== 'practice') {
-        activePlayers.push({ key: 'blue1', team: 'Blue', colorClass: 'blue-team-card' });
-        if (gameState.mode === '2v2') {
-            activePlayers.push({ key: 'blue2', team: 'Blue', colorClass: 'blue-team-card' });
-        }
-    }
+    boards.forEach(board => {
+        // Create Board Section Header
+        const boardHeader = document.createElement('h3');
+        boardHeader.className = 'board-stats-header';
+        boardHeader.textContent = board.title;
+        container.appendChild(boardHeader);
 
-    activePlayers.forEach(({ key, team, colorClass }) => {
-        const p = gameState.players[key];
-        const avgPerInning = p.inningsCount > 0 ? (p.totalPts / p.inningsCount).toFixed(1) : '0.0';
-        
-        // Format +/- string and color state
-        const netVal = netScores[key];
-        let netDisplay = 'N/A';
-        let netColorClass = 'net-neutral';
+        const boardGrid = document.createElement('div');
+        boardGrid.className = 'board-stats-grid';
 
-        if (gameState.mode !== 'practice') {
-            if (netVal > 0) {
-                netDisplay = `+${netVal}`;
-                netColorClass = 'net-positive';
-            } else if (netVal < 0) {
-                netDisplay = `${netVal}`;
-                netColorClass = 'net-negative';
-            } else {
-                netDisplay = '0';
-                netColorClass = 'net-neutral';
+        board.players.forEach(({ key, team, colorClass }) => {
+            if (gameState.mode === 'practice' && team === 'Blue') return;
+
+            const p = gameState.players[key];
+            const avgPerInning = p.inningsCount > 0 ? (p.totalPts / p.inningsCount).toFixed(1) : '0.0';
+            
+            const netVal = netScores[key];
+            let netDisplay = 'N/A';
+            let netColorClass = 'net-neutral';
+
+            if (gameState.mode !== 'practice') {
+                if (netVal > 0) {
+                    netDisplay = `+${netVal}`;
+                    netColorClass = 'net-positive';
+                } else if (netVal < 0) {
+                    netDisplay = `${netVal}`;
+                    netColorClass = 'net-negative';
+                } else {
+                    netDisplay = '0';
+                    netColorClass = 'net-neutral';
+                }
             }
-        }
 
-        const card = document.createElement('div');
-        card.className = `player-stat-card ${colorClass}`;
-        card.innerHTML = `
-            <div class="player-card-header">
-                <div>
-                    <span class="team-badge ${team.toLowerCase()}-badge">${team} Team</span>
-                    <h3>${p.name}</h3>
-                </div>
-                <div class="highlight-metrics-group">
-                    <div class="highlight-metric-box">
-                        <span class="metric-label">AVG / INNING</span>
-                        <span class="metric-value">${avgPerInning}</span>
+            const card = document.createElement('div');
+            card.className = `player-stat-card ${colorClass}`;
+            card.innerHTML = `
+                <div class="player-card-header">
+                    <div>
+                        <span class="team-badge ${team.toLowerCase()}-badge">${team} Team (${p.side})</span>
+                        <h3>${p.name}</h3>
                     </div>
-                    <div class="highlight-metric-box ${netColorClass}">
-                        <span class="metric-label">MATCH +/-</span>
-                        <span class="metric-value">${netDisplay}</span>
+                    <div class="highlight-metrics-group">
+                        <div class="highlight-metric-box">
+                            <span class="metric-label">AVG / INNING</span>
+                            <span class="metric-value">${avgPerInning}</span>
+                        </div>
+                        <div class="highlight-metric-box ${netColorClass}">
+                            <span class="metric-label">MATCH +/-</span>
+                            <span class="metric-value">${netDisplay}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <span class="stat-value">${p.totalPts}</span>
-                    <span class="stat-label">Total Points</span>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-value">${p.totalPts}</span>
+                        <span class="stat-label">Total Points</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">${p.inningsCount}</span>
+                        <span class="stat-label">Innings Pitched</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">${p.totalHoles}</span>
+                        <span class="stat-label">Holes (3pt)</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">${p.totalBoards}</span>
+                        <span class="stat-label">Boards (1pt)</span>
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-value">${p.inningsCount}</span>
-                    <span class="stat-label">Innings Pitched</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-value">${p.totalHoles}</span>
-                    <span class="stat-label">Holes (3pt)</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-value">${p.totalBoards}</span>
-                    <span class="stat-label">Boards (1pt)</span>
-                </div>
-            </div>
-        `;
-        container.appendChild(card);
+            `;
+            boardGrid.appendChild(card);
+        });
+
+        container.appendChild(boardGrid);
     });
 }
 
