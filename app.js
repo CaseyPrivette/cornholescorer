@@ -786,6 +786,14 @@ function renderStatsTab() {
 
             const p = gameState.players[key];
             const avgPerInning = p.inningsCount > 0 ? (p.totalPts / p.inningsCount).toFixed(1) : '0.0';
+
+            const boardPercent = p.totalBoards + p.totalHoles > 0 ? ((p.totalBoards / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
+
+            const holePercent = p.totalBoards + p.totalHoles > 0 ? ((p.totalHoles / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
+
+            const misses = p.totalBoards + p.totalHoles > 0 ? p.inningsCount*4 - p.totalBoards - p.totalHoles;
+
+            const missPercent = p.totalBoards + p.totalHoles > 0 ? (((p.inningsCount*4 - p.totalBoards - p.totalHoles) / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
             
             const netVal = netScores[key];
             let netDisplay = 'N/A';
@@ -833,12 +841,16 @@ function renderStatsTab() {
                         <span class="stat-label">Total Throws</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-value">${p.totalHoles}</span>
+                        <span class="stat-value">${p.totalHoles} (${holePercent}%)</span>
                         <span class="stat-label">Hole</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-value">${p.totalBoards}</span>
+                        <span class="stat-value">${p.totalBoards} (${boardPercent}%)</span>
                         <span class="stat-label">Board</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">${misses} (${missPercent}%)</span>
+                        <span class="stat-label">Misses</span>
                     </div>
                 </div>
             `;
