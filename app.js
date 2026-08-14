@@ -275,6 +275,13 @@ function startMatch() {
     gameState.history = [];
     gameState.detailedPlayerLogs = [];
 
+    // Re-enable submit button for new game
+    const submitBtn = document.getElementById('btnEndInning');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Inning';
+    }
+
     Object.keys(gameState.players).forEach(p => {
         gameState.players[p].totalPts = 0;
         gameState.players[p].inningsCount = 0;
@@ -362,7 +369,6 @@ function submitInning() {
     gameState.players[redPitcherKey].totalBoards += redBoard;
     gameState.players[redPitcherKey].totalHoles += redHole;
 
-    // Push Red Player log
     gameState.detailedPlayerLogs.push({
         inning: gameState.currentInning,
         team: 'Red',
@@ -385,7 +391,6 @@ function submitInning() {
         gameState.players[bluePitcherKey].totalBoards += blueBoard;
         gameState.players[bluePitcherKey].totalHoles += blueHole;
 
-        // Push Blue Player log
         gameState.detailedPlayerLogs.push({
             inning: gameState.currentInning,
             team: 'Blue',
@@ -416,6 +421,67 @@ function submitInning() {
     updateScoreboardDisplay();
     renderLogTable();
     renderStatsTab();
+
+    // Check if either team reached 21 points
+    checkMatchCompletion();
+}
+
+// Check score threshold and launch game end prompt
+function checkMatchCompletion() {
+    const WINNING_SCORE = 21;
+    let winnerText = '';
+
+    if (gameState.mode === 'practice' && gameState.redScore >= WINNING_SCORE) {
+        winnerText = `Practice Target Reached! (${gameState.redScore} pts)`;
+    } else if (gameState.redScore >= WINNING_SCORE && gameState.redScore > gameState.blueScore) {
+        winnerText = `Red Team Wins! (${gameState.redScore} - ${gameState.blueScore})`;
+    } else if (gameState.blueScore >= WINNING_SCORE && gameState.blueScore > gameState.redScore) {
+        winnerText = `Blue Team Wins! (${gameState.blueScore} - ${gameState.redScore})`;
+    }
+
+    if (winnerText) {
+        // Disable submission button once game is over
+        const submitBtn = document.getElementById('btnEndInning');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Match Complete';
+        }
+        showGameEndModal(winnerText);
+    }
+}
+
+// Dynamic Win Pop-up Modal Controls
+function showGameEndModal(winnerText) {
+    let modal = document.getElementById('game-end-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'game-end-modal';
+        modal.className = 'modal-overlay';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div class="modal-card">
+            <span class="modal-badge">GAME OVER</span>
+            <h2>${winnerText}</h2>
+            <p>Would you like to save this game's logs and statistics to Google Sheets?</p>
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="confirmSaveAndClose()">Save to Google Sheets</button>
+                <button class="btn btn-secondary" onclick="closeGameEndModal()">Dismiss</button>
+            </div>
+        </div>
+    `;
+    modal.style.display = 'flex';
+}
+
+function confirmSaveAndClose() {
+    saveMatchToSheet();
+    closeGameEndModal();
+}
+
+function closeGameEndModal() {
+    const modal = document.getElementById('game-end-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 function resetThrowInputs() {
