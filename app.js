@@ -284,16 +284,16 @@ function startMatch() {
         return el ? (el.value || fallback) : fallback;
     };
 
-    gameState.players.blue1.name = getSelectedName('blue-player-1', 'Blue P1');
+    gameState.players.blue1.name = getSelectedName('blue-player-1', 'Blue P1') || 'Blue P1';
     gameState.players.blue1.side = 'Left';
 
-    gameState.players.red1.name = getSelectedName('red-player-1', 'Red P1');
+    gameState.players.red1.name = getSelectedName('red-player-1', 'Red P1') || 'Red P1';
     gameState.players.red1.side = 'Right';
 
-    gameState.players.red2.name = getSelectedName('red-player-2', 'Red P2');
+    gameState.players.red2.name = getSelectedName('red-player-2', 'Red P2') || 'Red P2';
     gameState.players.red2.side = 'Left';
 
-    gameState.players.blue2.name = getSelectedName('blue-player-2', 'Blue P2');
+    gameState.players.blue2.name = getSelectedName('blue-player-2', 'Blue P2') || 'Blue P2';
     gameState.players.blue2.side = 'Right';
 
     gameState.currentInning = 1;
@@ -345,15 +345,32 @@ function getActivePitcherKey(team) {
     return getPitcherKeyForInning(team, gameState.currentInning);
 }
 
+function getPlayerDisplayName(playerKey, fallback) {
+    const raw = gameState.players[playerKey]?.name;
+    return raw && raw.trim() ? raw.trim() : fallback;
+}
+
+function getPlayerLabelFallback(playerKey) {
+    const fallbackMap = {
+        red1: 'Red P1',
+        red2: 'Red P2',
+        blue1: 'Blue P1',
+        blue2: 'Blue P2'
+    };
+    return fallbackMap[playerKey] || 'Player';
+}
+
 function updatePitcherLabels() {
     const redKey = getActivePitcherKey('red');
+    const redFallback = redKey === 'red1' ? 'Red P1' : 'Red P2';
     const redLabel = document.getElementById('red-pitcher-label');
-    if (redLabel) redLabel.textContent = `RED: ${gameState.players[redKey].name}`;
+    if (redLabel) redLabel.textContent = `RED: ${getPlayerDisplayName(redKey, redFallback)}`;
 
     if (gameState.mode !== 'practice') {
         const blueKey = getActivePitcherKey('blue');
+        const blueFallback = blueKey === 'blue1' ? 'Blue P1' : 'Blue P2';
         const blueLabel = document.getElementById('blue-pitcher-label');
-        if (blueLabel) blueLabel.textContent = `BLUE: ${gameState.players[blueKey].name}`;
+        if (blueLabel) blueLabel.textContent = `BLUE: ${getPlayerDisplayName(blueKey, blueFallback)}`;
     }
     
     const innLabel = document.getElementById('display-inn-num');
@@ -784,14 +801,16 @@ function renderStatsTab() {
         board.players.forEach(({ key, team, colorClass }) => {
             if (gameState.mode === 'practice' && team === 'Blue') return;
 
-            const p = gameState.players[key];
+            const p = gameState.players[key] || { name: '', side: '', totalPts: 0, inningsCount: 0, totalHoles: 0, totalBoards: 0 };
+            const safeName = getPlayerDisplayName(key, getPlayerLabelFallback(key));
+            const safeSide = p.side || (team === 'Blue' ? 'Left' : 'Right');
             const avgPerInning = p.inningsCount > 0 ? (p.totalPts / p.inningsCount).toFixed(1) : '0.0';
 
             const boardPercent = p.totalBoards + p.totalHoles > 0 ? ((p.totalBoards / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
 
             const holePercent = p.totalBoards + p.totalHoles > 0 ? ((p.totalHoles / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
 
-            const misses = p.totalBoards + p.totalHoles > 0 ? (p.inningsCount*4 - p.totalBoards - p.totalHoles).toFixed(1) : '0';
+            const misses = p.totalBoards + p.totalHoles > 0 ? (p.inningsCount*4 - p.totalBoards - p.totalHoles).toFixed(0) : '0';
 
             const missPercent = p.totalBoards + p.totalHoles > 0 ? (((p.inningsCount*4 - p.totalBoards - p.totalHoles) / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
             
@@ -817,8 +836,8 @@ function renderStatsTab() {
             card.innerHTML = `
                 <div class="player-card-header">
                     <div>
-                        <span class="team-badge ${team.toLowerCase()}-badge">${team} Team (${p.side})</span>
-                        <h3>${p.name}</h3>
+                        <span class="team-badge ${team.toLowerCase()}-badge">${team} Team (${safeSide})</span>
+                        <h3>${safeName}</h3>
                     </div>
                     <div class="highlight-metrics-group">
                         <div class="highlight-metric-box">
