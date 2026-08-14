@@ -337,7 +337,7 @@ body {
 
 .highlight-metric-box .metric-label {
     display: block;
-    font-size: 0.75rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: 0.8px;
     color: #94a3b8;
@@ -368,13 +368,13 @@ body {
 
 .stat-box .stat-value {
     display: block;
-    font-size: 1.3rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: #f8fafc;
 }
 
 .stat-box .stat-label {
-    font-size: 0.8rem;
+    font-size: 1rem;
     color: #94a3b8;
     font-weight: 600;
 }
