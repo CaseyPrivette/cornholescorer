@@ -791,7 +791,7 @@ function renderStatsTab() {
 
             const holePercent = p.totalBoards + p.totalHoles > 0 ? ((p.totalHoles / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
 
-            const misses = p.totalBoards + p.totalHoles > 0 ? p.inningsCount*4 - p.totalBoards - p.totalHoles;
+            const misses = p.totalBoards + p.totalHoles > 0 ? (p.inningsCount*4 - p.totalBoards - p.totalHoles).toFixed(1) : '0';
 
             const missPercent = p.totalBoards + p.totalHoles > 0 ? (((p.inningsCount*4 - p.totalBoards - p.totalHoles) / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
             
