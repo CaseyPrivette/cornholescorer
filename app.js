@@ -190,6 +190,40 @@ function createButtonGroup(containerId, maxBags, onClickCallback) {
 
 function setThrowValue(key, val) {
     gameState.currentInputs[key] = val;
+
+    // Enforce 4-bag max limit per team dynamically
+    if (key === 'redBoard' && (val + gameState.currentInputs.redHole > 4)) {
+        gameState.currentInputs.redHole = 4 - val;
+    } else if (key === 'redHole' && (val + gameState.currentInputs.redBoard > 4)) {
+        gameState.currentInputs.redBoard = 4 - val;
+    } else if (key === 'blueBoard' && (val + gameState.currentInputs.blueHole > 4)) {
+        gameState.currentInputs.blueHole = 4 - val;
+    } else if (key === 'blueHole' && (val + gameState.currentInputs.blueBoard > 4)) {
+        gameState.currentInputs.blueBoard = 4 - val;
+    }
+
+    // Refresh button selection states and disabled locks
+    updateButtonSelectionUI();
+    updateButtonConstraints();
+}
+
+function updateButtonSelectionUI() {
+    updateContainerSelection('red-board-boxes', gameState.currentInputs.redBoard);
+    updateContainerSelection('red-hole-boxes', gameState.currentInputs.redHole);
+    updateContainerSelection('blue-board-boxes', gameState.currentInputs.blueBoard);
+    updateContainerSelection('blue-hole-boxes', gameState.currentInputs.blueHole);
+}
+
+function updateContainerSelection(containerId, activeVal) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    Array.from(container.children).forEach((btn, idx) => {
+        if (idx === activeVal) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
 }
 
 function updateButtonConstraints() {
@@ -421,26 +455,63 @@ function renderStatsTab() {
     if (!container) return;
     container.innerHTML = '';
 
-    const activeKeys = ['red1'];
-    if (gameState.mode === '2v2') activeKeys.push('red2');
+    // Calculate individual net +/- totals based on direct inning matchups
+    const netScores = calculatePlayerNetScores();
 
-    if (gameState.mode !== 'practice') {
-        activeKeys.push('blue1');
-        if (gameState.mode === '2v2') activeKeys.push('blue2');
+    const activePlayers = [
+        { key: 'red1', team: 'Red', colorClass: 'red-team-card' }
+    ];
+
+    if (gameState.mode === '2v2') {
+        activePlayers.push({ key: 'red2', team: 'Red', colorClass: 'red-team-card' });
     }
 
-    activeKeys.forEach(key => {
+    if (gameState.mode !== 'practice') {
+        activePlayers.push({ key: 'blue1', team: 'Blue', colorClass: 'blue-team-card' });
+        if (gameState.mode === '2v2') {
+            activePlayers.push({ key: 'blue2', team: 'Blue', colorClass: 'blue-team-card' });
+        }
+    }
+
+    activePlayers.forEach(({ key, team, colorClass }) => {
         const p = gameState.players[key];
         const avgPerInning = p.inningsCount > 0 ? (p.totalPts / p.inningsCount).toFixed(1) : '0.0';
+        
+        // Format +/- string and color state
+        const netVal = netScores[key];
+        let netDisplay = 'N/A';
+        let netColorClass = 'net-neutral';
+
+        if (gameState.mode !== 'practice') {
+            if (netVal > 0) {
+                netDisplay = `+${netVal}`;
+                netColorClass = 'net-positive';
+            } else if (netVal < 0) {
+                netDisplay = `${netVal}`;
+                netColorClass = 'net-negative';
+            } else {
+                netDisplay = '0';
+                netColorClass = 'net-neutral';
+            }
+        }
 
         const card = document.createElement('div');
-        card.className = 'player-stat-card';
+        card.className = `player-stat-card ${colorClass}`;
         card.innerHTML = `
             <div class="player-card-header">
-                <h3>${p.name}</h3>
-                <div class="highlight-metric-box">
-                    <span class="metric-label">AVG / INNING</span>
-                    <span class="metric-value">${avgPerInning}</span>
+                <div>
+                    <span class="team-badge ${team.toLowerCase()}-badge">${team} Team</span>
+                    <h3>${p.name}</h3>
+                </div>
+                <div class="highlight-metrics-group">
+                    <div class="highlight-metric-box">
+                        <span class="metric-label">AVG / INNING</span>
+                        <span class="metric-value">${avgPerInning}</span>
+                    </div>
+                    <div class="highlight-metric-box ${netColorClass}">
+                        <span class="metric-label">MATCH +/-</span>
+                        <span class="metric-value">${netDisplay}</span>
+                    </div>
                 </div>
             </div>
             <div class="stats-grid">
@@ -464,4 +535,25 @@ function renderStatsTab() {
         `;
         container.appendChild(card);
     });
+}
+
+// Helper to sum differential (+/-) for matched pitchers
+function calculatePlayerNetScores() {
+    const nets = { red1: 0, red2: 0, blue1: 0, blue2: 0 };
+    if (gameState.mode === 'practice') return nets;
+
+    gameState.history.forEach(row => {
+        const diff = row.redGross - row.blueGross;
+
+        // Inning pitch assignments: odd innings = Pitcher 1s, even innings = Pitcher 2s (in 2v2)
+        if (gameState.mode === '2v2' && row.inning % 2 === 0) {
+            nets.red2 += diff;
+            nets.blue2 -= diff;
+        } else {
+            nets.red1 += diff;
+            nets.blue1 -= diff;
+        }
+    });
+
+    return nets;
 }

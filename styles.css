@@ -244,7 +244,8 @@ body {
 }
 
 .box-btn.disabled {
-    opacity: 0.2;
+    opacity: 0.3;
+    pointer-events: none;
     cursor: not-allowed;
     background: #0f172a;
     border-color: #1e293b;
@@ -376,4 +377,54 @@ body {
     font-size: 0.8rem;
     color: #94a3b8;
     font-weight: 600;
+}
+
+/* STAT CARD TEAM THEMING */
+.player-stat-card.red-team-card {
+    border-left: 6px solid #e63946;
+}
+
+.player-stat-card.blue-team-card {
+    border-left: 6px solid #1d3557;
+}
+
+/* TEAM BADGES */
+.team-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.team-badge.red-badge {
+    background-color: #ffe5e5;
+    color: #e63946;
+}
+
+.team-badge.blue-badge {
+    background-color: #e2eafc;
+    color: #1d3557;
+}
+
+/* STAT METRIC GROUPS */
+.highlight-metrics-group {
+    display: flex;
+    gap: 10px;
+}
+
+/* MATCH +/- DIFFERENTIAL STYLES */
+.highlight-metric-box.net-positive .metric-value {
+    color: #22c55e; /* Green for + */
+}
+
+.highlight-metric-box.net-negative .metric-value {
+    color: #ef4444; /* Red for - */
+}
+
+.highlight-metric-box.net-neutral .metric-value {
+    color: #94a3b8; /* Neutral Slate */
 }
