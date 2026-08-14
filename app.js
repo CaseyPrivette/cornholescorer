@@ -48,27 +48,37 @@ function toggleGameMode() {
     const mode = document.getElementById('game-mode').value;
     gameState.mode = mode;
 
-    const redP2 = document.getElementById('red-p2-group');
-    const blueP2 = document.getElementById('blue-p2-group');
-    const blueSetup = document.getElementById('blue-setup-section');
+    const board1Card = document.querySelectorAll('.board-setup-card')[0];
+    const board2Card = document.querySelectorAll('.board-setup-card')[1];
+    
+    const blueGroup1 = document.getElementById('blue-player-1')?.parentElement;
+    const blueGroup2 = document.getElementById('blue-player-2')?.parentElement;
+    const redGroup2 = document.getElementById('red-player-2')?.parentElement;
+
     const blueInputSection = document.getElementById('blue-team-section');
     const blueScoreBox = document.getElementById('blue-score-box');
 
     if (mode === 'practice') {
-        if (redP2) redP2.style.display = 'none';
-        if (blueSetup) blueSetup.style.display = 'none';
+        // Hide Board 2 and all Blue elements
+        if (board1Card) board1Card.style.display = 'block';
+        if (board2Card) board2Card.style.display = 'none';
+        if (blueGroup1) blueGroup1.style.display = 'none';
         if (blueInputSection) blueInputSection.style.display = 'none';
         if (blueScoreBox) blueScoreBox.style.display = 'none';
     } else if (mode === '1v1') {
-        if (redP2) redP2.style.display = 'none';
-        if (blueP2) blueP2.style.display = 'none';
-        if (blueSetup) blueSetup.style.display = 'block';
+        // Hide Board 2 (Player 2s), show Board 1 (Blue & Red)
+        if (board1Card) board1Card.style.display = 'block';
+        if (board2Card) board2Card.style.display = 'none';
+        if (blueGroup1) blueGroup1.style.display = 'block';
         if (blueInputSection) blueInputSection.style.display = 'block';
         if (blueScoreBox) blueScoreBox.style.display = 'block';
-    } else { // 2v2
-        if (redP2) redP2.style.display = 'block';
-        if (blueP2) blueP2.style.display = 'block';
-        if (blueSetup) blueSetup.style.display = 'block';
+    } else { 
+        // 2v2: Show all boards and player inputs
+        if (board1Card) board1Card.style.display = 'block';
+        if (board2Card) board2Card.style.display = 'block';
+        if (blueGroup1) blueGroup1.style.display = 'block';
+        if (blueGroup2) blueGroup2.style.display = 'block';
+        if (redGroup2) redGroup2.style.display = 'block';
         if (blueInputSection) blueInputSection.style.display = 'block';
         if (blueScoreBox) blueScoreBox.style.display = 'block';
     }
@@ -85,16 +95,16 @@ function fetchRosterFromSheet() {
             if (Array.isArray(roster) && roster.length > 0) {
                 gameState.roster = roster;
             }
-            populateRosterDropdowns();
+            populateRosterDropdowns(gameState.roster);
         })
         .catch(err => {
             console.warn('Falling back to default roster:', err);
-            populateRosterDropdowns();
+            populateRosterDropdowns(gameState.roster);
         });
 }
 
-// Populate select elements with roster names
-function populateRosterDropdowns(playerList) {
+// Fixed: Default parameter if playerList is missing
+function populateRosterDropdowns(playerList = gameState.roster) {
     const selectIds = ['blue-player-1', 'red-player-1', 'blue-player-2', 'red-player-2'];
     
     selectIds.forEach((id, index) => {
@@ -110,7 +120,7 @@ function populateRosterDropdowns(playerList) {
             select.appendChild(opt);
         });
 
-        // Set sensible defaults if available
+        // Set sensible default selections across dropdowns
         if (select.children[index]) {
             select.selectedIndex = index;
         }
