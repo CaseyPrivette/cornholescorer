@@ -829,16 +829,16 @@ function renderStatsTab() {
                         <span class="stat-label">Total Points</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-value">${p.inningsCount}</span>
-                        <span class="stat-label">Innings Pitched</span>
+                        <span class="stat-value">${p.inningsCount*4}</span>
+                        <span class="stat-label">Total Throws</span>
                     </div>
                     <div class="stat-box">
                         <span class="stat-value">${p.totalHoles}</span>
-                        <span class="stat-label">Holes (3pt)</span>
+                        <span class="stat-label">Hole</span>
                     </div>
                     <div class="stat-box">
                         <span class="stat-value">${p.totalBoards}</span>
-                        <span class="stat-label">Boards (1pt)</span>
+                        <span class="stat-label">Board</span>
                     </div>
                 </div>
             `;
