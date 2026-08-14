@@ -22,7 +22,8 @@ let gameState = {
         blueHole: 0
     },
     history: [],
-    detailedPlayerLogs: [] // Detailed rows for Google Sheets logging
+    detailedPlayerLogs: [],
+    editingHistoryIndex: null
 };
 
 // INITIALIZATION
@@ -300,6 +301,7 @@ function startMatch() {
     gameState.blueScore = 0;
     gameState.history = [];
     gameState.detailedPlayerLogs = [];
+    gameState.editingHistoryIndex = null;
 
     const submitBtn = document.getElementById('btnEndInning');
     if (submitBtn) {
@@ -323,18 +325,24 @@ function startMatch() {
     if (scoreTabBtn) scoreTabBtn.click();
 }
 
-function getActivePitcherKey(team) {
+function getPitcherKeyForInning(team, inningNumber) {
+    const inning = inningNumber || gameState.currentInning;
+
     if (team === 'red') {
         if (gameState.mode === '2v2') {
-            return gameState.currentInning % 2 !== 0 ? 'red1' : 'red2';
+            return inning % 2 !== 0 ? 'red1' : 'red2';
         }
         return 'red1';
-    } else {
-        if (gameState.mode === '2v2') {
-            return gameState.currentInning % 2 !== 0 ? 'blue1' : 'blue2';
-        }
-        return 'blue1';
     }
+
+    if (gameState.mode === '2v2') {
+        return inning % 2 !== 0 ? 'blue1' : 'blue2';
+    }
+    return 'blue1';
+}
+
+function getActivePitcherKey(team) {
+    return getPitcherKeyForInning(team, gameState.currentInning);
 }
 
 function updatePitcherLabels() {
@@ -352,6 +360,143 @@ function updatePitcherLabels() {
     if (innLabel) innLabel.textContent = gameState.currentInning;
 }
 
+function getNextInningNumber() {
+    if (gameState.history.length === 0) return 1;
+    return Math.max(...gameState.history.map(row => Number(row.inning || 0))) + 1;
+}
+
+function recalculateMatchFromHistory() {
+    gameState.redScore = 0;
+    gameState.blueScore = 0;
+    gameState.detailedPlayerLogs = [];
+
+    Object.keys(gameState.players).forEach(playerKey => {
+        gameState.players[playerKey].totalPts = 0;
+        gameState.players[playerKey].inningsCount = 0;
+        gameState.players[playerKey].totalHoles = 0;
+        gameState.players[playerKey].totalBoards = 0;
+    });
+
+    gameState.history.forEach(row => {
+        const inningNumber = Number(row.inning || 1);
+        const isPractice = gameState.mode === 'practice';
+        const redBoard = Number(row.redBoard || 0);
+        const redHole = Number(row.redHole || 0);
+        const redMissed = 4 - (redBoard + redHole);
+        const redGross = redBoard + (redHole * 3);
+
+        const blueBoard = isPractice ? 0 : Number(row.blueBoard || 0);
+        const blueHole = isPractice ? 0 : Number(row.blueHole || 0);
+        const blueMissed = isPractice ? 0 : 4 - (blueBoard + blueHole);
+        const blueGross = blueBoard + (blueHole * 3);
+
+        const redPitcherKey = getPitcherKeyForInning('red', inningNumber);
+        const redPlayer = gameState.players[redPitcherKey];
+
+        redPlayer.totalPts += redGross;
+        redPlayer.inningsCount += 1;
+        redPlayer.totalBoards += redBoard;
+        redPlayer.totalHoles += redHole;
+
+        let newRedScore = gameState.redScore;
+        let newBlueScore = gameState.blueScore;
+        let netText = '0';
+
+        if (isPractice) {
+            newRedScore += redGross;
+            gameState.redScore = newRedScore;
+            netText = `+${redGross}`;
+        } else {
+            if (redGross > blueGross) {
+                const redNet = redGross - blueGross;
+                newRedScore += redNet;
+                gameState.redScore = newRedScore;
+                netText = `+${redNet} Red`;
+            } else if (blueGross > redGross) {
+                const blueNet = blueGross - redGross;
+                newBlueScore += blueNet;
+                gameState.blueScore = newBlueScore;
+                netText = `+${blueNet} Blue`;
+            } else {
+                netText = 'Tie (0)';
+            }
+        }
+
+        gameState.detailedPlayerLogs.push({
+            inning: inningNumber,
+            team: 'Red',
+            playerName: redPlayer.name,
+            side: redPlayer.side,
+            board: redBoard,
+            hole: redHole,
+            missed: redMissed,
+            inningScore: redGross,
+            runningScore: gameState.redScore,
+            isPractice: isPractice
+        });
+
+        if (!isPractice) {
+            const bluePitcherKey = getPitcherKeyForInning('blue', inningNumber);
+            const bluePlayer = gameState.players[bluePitcherKey];
+
+            bluePlayer.totalPts += blueGross;
+            bluePlayer.inningsCount += 1;
+            bluePlayer.totalBoards += blueBoard;
+            bluePlayer.totalHoles += blueHole;
+
+            gameState.detailedPlayerLogs.push({
+                inning: inningNumber,
+                team: 'Blue',
+                playerName: bluePlayer.name,
+                side: bluePlayer.side,
+                board: blueBoard,
+                hole: blueHole,
+                missed: blueMissed,
+                inningScore: blueGross,
+                runningScore: gameState.blueScore,
+                isPractice: false
+            });
+        }
+
+        row.redPitcher = redPlayer.name;
+        row.redGross = redGross;
+        row.bluePitcher = isPractice ? '-' : gameState.players[getPitcherKeyForInning('blue', inningNumber)].name;
+        row.blueGross = blueGross;
+        row.redBoard = redBoard;
+        row.redHole = redHole;
+        row.blueBoard = blueBoard;
+        row.blueHole = blueHole;
+        row.netText = netText;
+        row.matchScore = `${gameState.redScore} - ${gameState.blueScore}`;
+    });
+
+    gameState.currentInning = getNextInningNumber();
+}
+
+function beginEditInning(historyIndex) {
+    const entry = gameState.history[historyIndex];
+    if (!entry) return;
+
+    gameState.editingHistoryIndex = historyIndex;
+    gameState.currentInning = Number(entry.inning || 1);
+    gameState.currentInputs = {
+        redBoard: Number(entry.redBoard || 0),
+        redHole: Number(entry.redHole || 0),
+        blueBoard: Number(entry.blueBoard || 0),
+        blueHole: Number(entry.blueHole || 0)
+    };
+
+    const submitBtn = document.getElementById('btnEndInning');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Edited Inning';
+    }
+
+    updatePitcherLabels();
+    updateButtonSelectionUI();
+    updateButtonConstraints();
+}
+
 // Log side information alongside detailed player logs
 function submitInning() {
     const isPractice = gameState.mode === 'practice';
@@ -364,6 +509,53 @@ function submitInning() {
     const blueHole = isPractice ? 0 : gameState.currentInputs.blueHole;
     const blueMissed = isPractice ? 0 : 4 - (blueBoard + blueHole);
     const blueGross = blueBoard + (blueHole * 3);
+
+    if (gameState.editingHistoryIndex !== null && gameState.editingHistoryIndex >= 0) {
+        const redPitcherKey = getPitcherKeyForInning('red', gameState.currentInning);
+        const redPlayer = gameState.players[redPitcherKey];
+
+        const updatedEntry = {
+            inning: gameState.currentInning,
+            redPitcher: redPlayer.name,
+            redBoard,
+            redHole,
+            redGross,
+            bluePitcher: isPractice ? '-' : gameState.players[getPitcherKeyForInning('blue', gameState.currentInning)].name,
+            blueBoard,
+            blueHole,
+            blueGross,
+            netText: 'Tie (0)',
+            matchScore: '0 - 0'
+        };
+
+        if (isPractice) {
+            updatedEntry.netText = `+${redGross}`;
+        } else if (redGross > blueGross) {
+            updatedEntry.netText = `+${redGross - blueGross} Red`;
+        } else if (blueGross > redGross) {
+            updatedEntry.netText = `+${blueGross - redGross} Blue`;
+        } else {
+            updatedEntry.netText = 'Tie (0)';
+        }
+
+        gameState.history[gameState.editingHistoryIndex] = updatedEntry;
+        gameState.editingHistoryIndex = null;
+        recalculateMatchFromHistory();
+        resetThrowInputs();
+
+        const submitBtn = document.getElementById('btnEndInning');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Inning';
+        }
+
+        updatePitcherLabels();
+        updateScoreboardDisplay();
+        renderLogTable();
+        renderStatsTab();
+        checkMatchCompletion();
+        return;
+    }
 
     let redNet = 0;
     let blueNet = 0;
@@ -387,7 +579,6 @@ function submitInning() {
         }
     }
 
-    // Red Pitcher Logging
     const redPitcherKey = getActivePitcherKey('red');
     const redPlayer = gameState.players[redPitcherKey];
     
@@ -400,7 +591,7 @@ function submitInning() {
         inning: gameState.currentInning,
         team: 'Red',
         playerName: redPlayer.name,
-        side: redPlayer.side, // 'Right'
+        side: redPlayer.side,
         board: redBoard,
         hole: redHole,
         missed: redMissed,
@@ -409,7 +600,6 @@ function submitInning() {
         isPractice: isPractice
     });
 
-    // Blue Pitcher Logging
     if (!isPractice) {
         const bluePitcherKey = getActivePitcherKey('blue');
         const bluePlayer = gameState.players[bluePitcherKey];
@@ -423,7 +613,7 @@ function submitInning() {
             inning: gameState.currentInning,
             team: 'Blue',
             playerName: bluePlayer.name,
-            side: bluePlayer.side, // 'Left'
+            side: bluePlayer.side,
             board: blueBoard,
             hole: blueHole,
             missed: blueMissed,
@@ -436,8 +626,12 @@ function submitInning() {
     gameState.history.push({
         inning: gameState.currentInning,
         redPitcher: redPlayer.name,
+        redBoard,
+        redHole,
         redGross,
         bluePitcher: !isPractice ? gameState.players[getActivePitcherKey('blue')].name : '-',
+        blueBoard,
+        blueHole,
         blueGross,
         netText,
         matchScore: `${gameState.redScore} - ${gameState.blueScore}`
@@ -515,6 +709,8 @@ function closeGameEndModal() {
 function resetThrowInputs() {
     gameState.currentInputs = { redBoard: 0, redHole: 0, blueBoard: 0, blueHole: 0 };
     buildInputButtonGroups();
+    updateButtonSelectionUI();
+    updateButtonConstraints();
 }
 
 function updateScoreboardDisplay() {
@@ -529,8 +725,9 @@ function renderLogTable() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    [...gameState.history].reverse().forEach(row => {
+    [...gameState.history].reverse().forEach((row, reverseIndex) => {
         const tr = document.createElement('tr');
+        const originalIndex = gameState.history.length - 1 - reverseIndex;
         tr.innerHTML = `
             <td><strong>${row.inning}</strong></td>
             <td>${row.redPitcher}</td>
@@ -539,6 +736,7 @@ function renderLogTable() {
             <td class="blue-col">${row.blueGross}</td>
             <td><strong>${row.netText}</strong></td>
             <td><strong>${row.matchScore}</strong></td>
+            <td><button class="btn btn-secondary btn-sm" data-inning-index="${originalIndex}" onclick="beginEditInning(${originalIndex})">Edit</button></td>
         `;
         tbody.appendChild(tr);
     });
