@@ -278,7 +278,7 @@ function applyConstraints(boardContainerId, holeContainerId, currentBoard, curre
 // ============================================================================
 
 // Initialize player setup and assign explicit board sides
-function startMatch() {
+function syncPlayerNamesFromSetup() {
     const getSelectedName = (id, fallback) => {
         const el = document.getElementById(id);
         return el ? (el.value || fallback) : fallback;
@@ -295,6 +295,10 @@ function startMatch() {
 
     gameState.players.blue2.name = getSelectedName('blue-player-2', 'Blue P2') || 'Blue P2';
     gameState.players.blue2.side = 'Right';
+}
+
+function startMatch() {
+    syncPlayerNamesFromSetup();
 
     gameState.currentInning = 1;
     gameState.redScore = 0;
@@ -802,7 +806,12 @@ function renderStatsTab() {
             if (gameState.mode === 'practice' && team === 'Blue') return;
 
             const p = gameState.players[key] || { name: '', side: '', totalPts: 0, inningsCount: 0, totalHoles: 0, totalBoards: 0 };
-            const safeName = getPlayerDisplayName(key, getPlayerLabelFallback(key));
+            const safeName = getPlayerDisplayName(key, document.getElementById(
+                key === 'blue1' ? 'blue-player-1' :
+                key === 'red1' ? 'red-player-1' :
+                key === 'red2' ? 'red-player-2' :
+                'blue-player-2'
+            )?.value || getPlayerLabelFallback(key));
             const safeSide = p.side || (team === 'Blue' ? 'Left' : 'Right');
             const avgPerInning = p.inningsCount > 0 ? (p.totalPts / p.inningsCount).toFixed(1) : '0.0';
 
