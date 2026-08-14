@@ -93,23 +93,26 @@ function fetchRosterFromSheet() {
         });
 }
 
-function populateRosterDropdowns() {
-    const dropdowns = document.querySelectorAll('.roster-select');
-    dropdowns.forEach((select, index) => {
-        const currentValue = select.value;
+// Populate select elements with roster names
+function populateRosterDropdowns(playerList) {
+    const selectIds = ['blue-player-1', 'red-player-1', 'blue-player-2', 'red-player-2'];
+    
+    selectIds.forEach((id, index) => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
         select.innerHTML = '';
         
-        gameState.roster.forEach(playerName => {
+        playerList.forEach(name => {
             const opt = document.createElement('option');
-            opt.value = playerName;
-            opt.textContent = playerName;
+            opt.value = name;
+            opt.textContent = name;
             select.appendChild(opt);
         });
 
-        if (currentValue && gameState.roster.includes(currentValue)) {
-            select.value = currentValue;
-        } else if (gameState.roster[index]) {
-            select.value = gameState.roster[index];
+        // Set sensible defaults if available
+        if (select.children[index]) {
+            select.selectedIndex = index;
         }
     });
 }
@@ -265,16 +268,21 @@ function applyConstraints(boardContainerId, holeContainerId, currentBoard, curre
 
 // Initialize player setup and assign explicit board sides
 function startMatch() {
-    gameState.players.blue1.name = document.getElementById('blue-player-1')?.value || 'Blue P1';
+    const getSelectedName = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el ? (el.value || fallback) : fallback;
+    };
+
+    gameState.players.blue1.name = getSelectedName('blue-player-1', 'Blue P1');
     gameState.players.blue1.side = 'Left';
 
-    gameState.players.red1.name = document.getElementById('red-player-1')?.value || 'Red P1';
+    gameState.players.red1.name = getSelectedName('red-player-1', 'Red P1');
     gameState.players.red1.side = 'Right';
 
-    gameState.players.blue2.name = document.getElementById('blue-player-2')?.value || 'Blue P2';
+    gameState.players.blue2.name = getSelectedName('blue-player-2', 'Blue P2');
     gameState.players.blue2.side = 'Left';
 
-    gameState.players.red2.name = document.getElementById('red-player-2')?.value || 'Red P2';
+    gameState.players.red2.name = getSelectedName('red-player-2', 'Red P2');
     gameState.players.red2.side = 'Right';
 
     gameState.currentInning = 1;
