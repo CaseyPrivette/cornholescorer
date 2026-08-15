@@ -177,17 +177,37 @@ async function saveMatchToSheet() {
 
     try {
         const { collection, addDoc } = window.firestoreTools;
+        const now = new Date();
+
+        // 1. Write granular inning records to 'game_logs'
+        for (const log of gameState.detailedPlayerLogs) {
+            await addDoc(collection(window.db, "game_logs"), {
+                timestamp: now,
+                gameNumber: gameState.gameNumber || 1,
+                inningNumber: log.inning,
+                team: log.team,
+                playerName: log.playerName,
+                boardSide: log.side,
+                board: log.board,
+                hole: log.hole,
+                missed: log.missed,
+                inningScore: log.inningScore,
+                runningScore: log.runningScore,
+                isPractice: log.isPractice
+            });
+        }
+
+        // 2. Write game summary to 'matches'
         await addDoc(collection(window.db, "matches"), {
+            timestamp: now,
+            gameNumber: gameState.gameNumber || 1,
             mode: gameState.mode,
             redScore: gameState.redScore,
             blueScore: gameState.blueScore,
-            players: gameState.players,
-            history: gameState.history,
-            detailedPlayerLogs: gameState.detailedPlayerLogs,
-            timestamp: new Date()
+            players: gameState.players
         });
 
-        alert('Match log saved directly to Firebase!');
+        alert('Match logs saved successfully to Firestore!');
     } catch (err) {
         alert('Save failed: ' + err);
     }
