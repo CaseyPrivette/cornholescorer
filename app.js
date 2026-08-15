@@ -87,6 +87,13 @@ function toggleGameMode() {
 // ============================================================================
 
 async function fetchRosterFromSheet() {
+    // Check if Firebase is ready on window object
+    if (!window.db || !window.firestoreTools) {
+        console.warn('Firebase db not attached yet, falling back to local state.');
+        populateRosterDropdowns(gameState.roster);
+        return;
+    }
+
     try {
         const { collection, getDocs } = window.firestoreTools;
         const querySnapshot = await getDocs(collection(window.db, "rosters"));
