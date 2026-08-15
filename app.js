@@ -748,9 +748,9 @@ function showGameEndModal(winnerText) {
         <div class="modal-card">
             <span class="modal-badge">GAME OVER</span>
             <h2>${winnerText}</h2>
-            <p>Would you like to save this game's logs and statistics to Google Sheets?</p>
+            <p>Would you like to save this game's logs and statistics Firestore?</p>
             <div class="modal-actions">
-                <button class="btn btn-success" onclick="confirmSaveAndClose()">Save to Google Sheets</button>
+                <button class="btn btn-success" onclick="confirmSaveAndClose()">Save to Firestore</button>
                 <button class="btn btn-secondary" onclick="closeGameEndModal()">Dismiss</button>
             </div>
         </div>
