@@ -198,32 +198,38 @@
             measurementId: "G-PNMVNRQ6XE"
             };
 
-                    async function uploadRosterToFirebase() {
-                    const existingRoster = 	["Casey P","Mike W","Dave B","Kirk W","Calvin Jr","Calvin Sr","Nathan","Nate","Tom","Terry","Wendy R","Barefoot Paul","Doc","James","Knicks Tom","Pete","Brad R","Mattie W","Hayden","Minna","Test McTestFace"]; // Replace this array with your copied JSON list
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
 
-                    console.log("Starting roster upload...");
-                    
-                    for (const name of existingRoster) {
-                        try {
-                        await addDoc(collection(window.db, "rosters"), {
-                            name: name,
-                            createdAt: new Date()
-                        });
-                        console.log(`Uploaded: ${name}`);
-                        } catch (error) {
-                        console.error(`Failed to upload ${name}:`, error);
-                        }
-                    }
-                    
-                    console.log("Roster upload complete!");
-                    }
+        // Expose db globally for app.js
+        window.db = db;
+        window.firestoreTools = { collection, getDocs, addDoc };
 
-                    // Call the function once when the page loads
-                    uploadRosterToFirebase();
+        // 2. Upload function using the local 'db' instance directly
+        async function uploadRosterToFirebase() {
+            const existingRoster = ["Casey P", "Player B", "Player C"]; // Your roster array here
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+            console.log("Starting roster upload...");
+
+            for (const name of existingRoster) {
+            try {
+                // Pass 'db' directly here, NOT 'window.db'
+                await addDoc(collection(db, "rosters"), {
+                name: name,
+                createdAt: new Date()
+                });
+                console.log(`Uploaded: ${name}`);
+            } catch (error) {
+                console.error(`Failed to upload ${name}:`, error);
+            }
+            }
+
+            console.log("Roster upload complete!");
+        }
+
+        // 3. Call the function AFTER db is ready
+        uploadRosterToFirebase();
     </script>
 </body>
 </html>
