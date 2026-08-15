@@ -87,19 +87,21 @@ function toggleGameMode() {
 // ============================================================================
 
 async function fetchRosterFromSheet() {
+    const fallbackRoster = [...gameState.roster];
+
     // 1. Check if Firebase is attached to the window object
     if (!window.db || !window.firestoreTools) {
         console.warn('Firebase db not attached yet, falling back to local state.');
-        populateRosterDropdowns(gameState.roster);
+        populateRosterDropdowns(fallbackRoster);
         return;
     }
 
     try {
         const { collection, getDocs } = window.firestoreTools;
         const querySnapshot = await getDocs(collection(window.db, "rosters"));
-        
+
         const namesList = [];
-        
+
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             if (data && data.name) {
@@ -118,7 +120,7 @@ async function fetchRosterFromSheet() {
         populateRosterDropdowns(gameState.roster);
     } catch (err) {
         console.warn('Falling back to default roster:', err);
-        populateRosterDropdowns(gameState.roster);
+        populateRosterDropdowns(fallbackRoster);
     }
 }
 
