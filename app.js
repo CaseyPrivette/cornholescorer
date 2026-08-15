@@ -87,7 +87,7 @@ function toggleGameMode() {
 // ============================================================================
 
 async function fetchRosterFromSheet() {
-    // Check if Firebase is ready on window object
+    // 1. Check if Firebase is attached to the window object
     if (!window.db || !window.firestoreTools) {
         console.warn('Firebase db not attached yet, falling back to local state.');
         populateRosterDropdowns(gameState.roster);
@@ -98,20 +98,23 @@ async function fetchRosterFromSheet() {
         const { collection, getDocs } = window.firestoreTools;
         const querySnapshot = await getDocs(collection(window.db, "rosters"));
         
-        const fetchedRoster = [];
-        querySnapshot.forEach((doc) => {
-            if (doc.data().name) {
-                fetchedRoster.push(doc.data().name);
+        const namesList = [];
+        
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data && data.name) {
+                namesList.push(data.name);
             }
         });
 
-        // Sort alphabetically (case-insensitive)
-        fetchedRoster.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        // 2. Sort names alphabetically (case-insensitive)
+        namesList.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
-        if (fetchedRoster.length > 0) {
-            gameState.roster = fetchedRoster;
+        // 3. Update global gameState roster if names were retrieved
+        if (namesList.length > 0) {
+            gameState.roster = namesList;
         }
-        
+
         populateRosterDropdowns(gameState.roster);
     } catch (err) {
         console.warn('Falling back to default roster:', err);
