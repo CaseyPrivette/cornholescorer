@@ -1,6 +1,3 @@
-// GOOGLE APPS SCRIPT WEB APP ENDPOINT
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxecJjJPboMkAWxldzcUrdtUdIANECUZUehkIa_srKjlz_gImnS6k921TfF0QUL8hRy/exec';
-
 // MATCH STATE
 let gameState = {
     gameNumber: null,
@@ -89,19 +86,20 @@ function toggleGameMode() {
 // GOOGLE SHEETS API INTEGRATION (ROSTER & LOGGING)
 // ============================================================================
 
-function fetchRosterFromSheet() {
-    fetch(`${SCRIPT_URL}?action=getRoster`)
-        .then(response => response.json())
-        .then(roster => {
-            if (Array.isArray(roster) && roster.length > 0) {
-                gameState.roster = roster;
-            }
-            populateRosterDropdowns(gameState.roster);
-        })
-        .catch(err => {
-            console.warn('Falling back to default roster:', err);
-            populateRosterDropdowns(gameState.roster);
-        });
+async function fetchRosterFromSheet() {
+    try {
+        const { collection, getDocs } = window.firestoreTools;
+        const querySnapshot = await getDocs(collection(window.db, "rosters"));
+        
+        const roster = [];
+        querySnapshot.forEach((doc) => roster.push(doc.data().name));
+
+        if (roster.length > 0) gameState.roster = roster;
+        populateRosterDropdowns(gameState.roster);
+    } catch (err) {
+        console.warn('Falling back to default roster:', err);
+        populateRosterDropdowns(gameState.roster);
+    }
 }
 
 // Fixed: Default parameter if playerList is missing
@@ -128,48 +126,49 @@ function populateRosterDropdowns(playerList = gameState.roster) {
     });
 }
 
-function addPlayerToSheet() {
+async function addPlayerToSheet() {
     const input = document.getElementById('new-player-name');
     const name = input ? input.value.trim() : '';
     if (!name) return;
 
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'addPlayer', playerName: name })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.roster) {
-            gameState.roster = data.roster;
-            populateRosterDropdowns();
-            if (input) input.value = '';
-            alert(`Player "${name}" added to Google Sheets roster!`);
-        }
-    })
-    .catch(err => alert('Failed to add player: ' + err));
+    try {
+        const { collection, addDoc } = window.firestoreTools;
+        await addDoc(collection(window.db, "rosters"), {
+            name: name,
+            createdAt: new Date()
+        });
+
+        gameState.roster.push(name);
+        populateRosterDropdowns();
+        if (input) input.value = '';
+        alert(`Player "${name}" added to Firebase roster!`);
+    } catch (err) {
+        alert('Failed to add player: ' + err);
+    }
 }
 
-function saveMatchToSheet() {
+async function saveMatchToSheet() {
     if (gameState.detailedPlayerLogs.length === 0) {
         alert('No innings recorded yet to save!');
         return;
     }
 
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'logMatch', matchData: gameState })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert(`Match log saved to Google Sheets! (Game #${data.gameNumber})`);
-        } else {
-            alert('Error saving match: ' + data.message);
-        }
-    })
-    .catch(err => alert('Save failed: ' + err));
+    try {
+        const { collection, addDoc } = window.firestoreTools;
+        await addDoc(collection(window.db, "matches"), {
+            mode: gameState.mode,
+            redScore: gameState.redScore,
+            blueScore: gameState.blueScore,
+            players: gameState.players,
+            history: gameState.history,
+            detailedPlayerLogs: gameState.detailedPlayerLogs,
+            timestamp: new Date()
+        });
+
+        alert('Match log saved directly to Firebase!');
+    } catch (err) {
+        alert('Save failed: ' + err);
+    }
 }
 
 // ============================================================================
