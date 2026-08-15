@@ -98,13 +98,20 @@ async function fetchRosterFromSheet() {
         const { collection, getDocs } = window.firestoreTools;
         const querySnapshot = await getDocs(collection(window.db, "rosters"));
         
-        const roster = [];
-        querySnapshot.forEach((doc) => roster.push(doc.data().name));
+        const fetchedRoster = [];
+        querySnapshot.forEach((doc) => {
+            if (doc.data().name) {
+                fetchedRoster.push(doc.data().name);
+            }
+        });
 
-        // Sort names alphabetically (case-insensitive)
-        roster.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        // Sort alphabetically (case-insensitive)
+        fetchedRoster.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
-        if (roster.length > 0) gameState.roster = roster;
+        if (fetchedRoster.length > 0) {
+            gameState.roster = fetchedRoster;
+        }
+        
         populateRosterDropdowns(gameState.roster);
     } catch (err) {
         console.warn('Falling back to default roster:', err);
