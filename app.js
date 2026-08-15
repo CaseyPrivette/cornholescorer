@@ -98,6 +98,9 @@ async function fetchRosterFromSheet() {
         const { collection, getDocs } = window.firestoreTools;
         const querySnapshot = await getDocs(collection(window.db, "rosters"));
         
+        // Sort names alphabetically (case-insensitive)
+        roster.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        
         const roster = [];
         querySnapshot.forEach((doc) => roster.push(doc.data().name));
 
