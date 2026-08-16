@@ -406,7 +406,12 @@ function renderPlayerTrendChart(gameSeries) {
         tooltip.innerHTML = `
             <strong>Game ${activePoint.gameNumber}</strong><br>
             Avg / inning: ${activePoint.avgPerInning.toFixed(2)}<br>
-            Net vs opp: ${activePoint.net >= 0 ? '+' : ''}${activePoint.net.toFixed(0)}
+            Net vs opp: ${activePoint.net >= 0 ? '+' : ''}${activePoint.net.toFixed(0)}<br>
+            <br>
+            <strong>Matchup:</strong><br>
+            Opponent: ${activePoint.opponent}<br>
+            Partner: ${activePoint.partner}<br>
+            Opp's Partner: ${activePoint.partnerOpponent}
         `;
         tooltip.style.left = `${event.clientX + 14}px`;
         tooltip.style.top = `${event.clientY + 14}px`;
@@ -727,11 +732,50 @@ async function loadPlayerDatabaseStats() {
         });
 
         const sortedGames = Object.entries(playerGameMap)
-            .map(([gameNumber, stats]) => ({
-                gameNumber: Number(gameNumber),
-                avgPerInning: stats.innings > 0 ? Number((stats.totalPoints / stats.innings).toFixed(2)) : 0,
-                net: Number(stats.net)
-            }))
+            .map(([gameNumber, stats]) => {
+                const gameNum = Number(gameNumber);
+                
+                // Find all players in this game
+                const gameLogs = allGameLogs.filter(log => Number(log.gameNumber || 0) === gameNum);
+                const playerTeam = stats.team;
+                const oppositeTeam = playerTeam === 'Red' ? 'Blue' : 'Red';
+                
+                // Get unique opponents (opposing team players)
+                const opponents = [...new Set(
+                    gameLogs
+                        .filter(log => log.team === oppositeTeam)
+                        .map(log => log.playerName || 'Unknown')
+                )];
+                
+                // Get unique partners (same team players)
+                const partners = [...new Set(
+                    gameLogs
+                        .filter(log => log.team === playerTeam && log.playerName !== playerName)
+                        .map(log => log.playerName || 'Unknown')
+                )];
+                
+                // Get partner's opponents
+                const partnerOpponents = [];
+                if (partners.length > 0) {
+                    const partnerLogs = gameLogs.filter(log => log.team === playerTeam && partners.includes(log.playerName));
+                    const partnerOpps = [...new Set(
+                        gameLogs
+                            .filter(log => log.team === oppositeTeam && 
+                                log.playerName !== opponents[0])
+                            .map(log => log.playerName || 'Unknown')
+                    )];
+                    partnerOpponents.push(...partnerOpps);
+                }
+                
+                return {
+                    gameNumber: gameNum,
+                    avgPerInning: stats.innings > 0 ? Number((stats.totalPoints / stats.innings).toFixed(2)) : 0,
+                    net: Number(stats.net),
+                    opponent: opponents.length > 0 ? opponents[0] : 'Unknown',
+                    partner: partners.length > 0 ? partners[0] : 'Unknown',
+                    partnerOpponent: partnerOpponents.length > 0 ? partnerOpponents[0] : 'Unknown'
+                };
+            })
             .sort((a, b) => a.gameNumber - b.gameNumber)
             .slice(-10);
 

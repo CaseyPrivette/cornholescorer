@@ -172,6 +172,16 @@
         <div id="tab-stats" class="tab-content">
             <section class="card">
                 <h2>Match Player Statistics</h2>
+                <div id="stats-container" class="stats-container">
+                    <!-- Stat cards dynamically rendered via JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 4: FIREBASE PLAYER STATS -->
+        <div id="tab-player-stats" class="tab-content">
+            <section class="card">
+                <h2>Player Performance</h2>
                 <div class="stats-filter-row">
                     <span class="stats-filter-label">View:</span>
                     <div class="side-radio-group" role="radiogroup" aria-label="Stats filter by board side">
@@ -189,16 +199,6 @@
                         </label>
                     </div>
                 </div>
-                <div id="stats-container" class="stats-container">
-                    <!-- Stat cards dynamically rendered via JS -->
-                </div>
-            </section>
-        </div>
-
-        <!-- TAB 4: FIREBASE PLAYER STATS -->
-        <div id="tab-player-stats" class="tab-content">
-            <section class="card">
-                <h2>Player Performance</h2>
                 <div class="form-group">
                     <label for="player-stats-select">Select Player</label>
                     <select id="player-stats-select" class="player-select">
