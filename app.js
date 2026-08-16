@@ -841,29 +841,36 @@ async function loadPlayerDatabaseStats() {
         const boardPercent = totalThrows > 0 ? ((totalBoards / totalThrows) * 100).toFixed(1) : '0.0';
         const missPercent = totalThrows > 0 ? ((totalMisses / totalThrows) * 100).toFixed(1) : '0.0';
         
-        // Calculate win/loss record based on the player's team total for each game.
-        // Use filtered logs so the record respects the selected board-side filter.
-        const teamTotalsByGame = {};
-        filteredPlayerLogs.forEach(log => {
-            const gameNumber = Number(log.gameNumber || 0);
-            const team = log.team || 'Unknown';
-            if (!gameNumber) return;
-
-            if (!teamTotalsByGame[gameNumber]) {
-                teamTotalsByGame[gameNumber] = { Red: 0, Blue: 0 };
-            }
-
-            teamTotalsByGame[gameNumber][team] += Number(log.inningScore || 0);
-        });
+        // Calculate win/loss record based on the player's team total for each completed game.
+        // Ignore unfinished games and use the full game score, not only the selected player's throws.
+        const relevantGameNumbers = [...new Set(
+            filteredPlayerLogs
+                .map(log => Number(log.gameNumber || 0))
+                .filter(Boolean)
+        )];
 
         let wins = 0;
         let losses = 0;
-        Object.entries(teamTotalsByGame).forEach(([gameNumber, totals]) => {
-            const game = allGames.find(entry => entry.gameNumber === Number(gameNumber));
-            if (!game) return;
 
-            const teamTotal = totals[game.playerTeam] || 0;
-            if (teamTotal >= 21) {
+        relevantGameNumbers.forEach(gameNumber => {
+            const gameLogs = allGameLogs.filter(log => Number(log.gameNumber || 0) === gameNumber);
+            if (!gameLogs.length) return;
+
+            const playerGameLog = filteredPlayerLogs.find(log => Number(log.gameNumber || 0) === gameNumber);
+            const playerTeam = playerGameLog ? playerGameLog.team : null;
+            if (!playerTeam) return;
+
+            const teamTotals = { Red: 0, Blue: 0 };
+            gameLogs.forEach(log => {
+                const team = log.team || 'Unknown';
+                teamTotals[team] = (teamTotals[team] || 0) + Number(log.inningScore || 0);
+            });
+
+            const maxInning = Math.max(...gameLogs.map(log => Number(log.inningNumber || log.inning || 0)), 0);
+            const gameIsComplete = teamTotals.Red >= 21 || teamTotals.Blue >= 21 || maxInning >= 4;
+            if (!gameIsComplete) return;
+
+            if ((teamTotals[playerTeam] || 0) >= 21) {
                 wins++;
             } else {
                 losses++;
