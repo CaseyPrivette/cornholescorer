@@ -173,13 +173,21 @@
             <section class="card">
                 <h2>Match Player Statistics</h2>
                 <div class="stats-filter-row">
-                    <label for="stats-side-sort">Sort by board side</label>
-                    <select id="stats-side-sort" onchange="renderStatsTab()">
-                        <option value="all">All players</option>
-                        <option value="left">Left side</option>
-                        <option value="right">Right side</option>
-                        <option value="overall">Overall only</option>
-                    </select>
+                    <span class="stats-filter-label">View:</span>
+                    <div class="side-radio-group" role="radiogroup" aria-label="Stats filter by board side">
+                        <label class="side-radio-option">
+                            <input type="radio" name="stats-side-filter" value="all" checked onchange="renderStatsTab()">
+                            <span>Overall</span>
+                        </label>
+                        <label class="side-radio-option">
+                            <input type="radio" name="stats-side-filter" value="right" onchange="renderStatsTab()">
+                            <span>Right</span>
+                        </label>
+                        <label class="side-radio-option">
+                            <input type="radio" name="stats-side-filter" value="left" onchange="renderStatsTab()">
+                            <span>Left</span>
+                        </label>
+                    </div>
                 </div>
                 <div id="stats-container" class="stats-container">
                     <!-- Stat cards dynamically rendered via JS -->

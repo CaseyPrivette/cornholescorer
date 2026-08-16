@@ -1460,7 +1460,7 @@ function renderStatsTab() {
     if (!container) return;
     container.innerHTML = '';
 
-    const statsMode = document.getElementById('stats-side-sort')?.value || 'all';
+    const statsMode = document.querySelector('input[name="stats-side-filter"]:checked')?.value || 'all';
     const netScores = calculatePlayerNetScores();
 
     const allPlayers = [
