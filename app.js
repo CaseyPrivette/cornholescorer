@@ -1460,10 +1460,83 @@ function renderStatsTab() {
     if (!container) return;
     container.innerHTML = '';
 
-    // Calculate individual net +/- totals based on direct inning matchups
+    const statsMode = document.getElementById('stats-side-sort')?.value || 'all';
     const netScores = calculatePlayerNetScores();
 
-    // Group players logically by board
+    const allPlayers = [
+        { key: 'red1', team: 'Red', colorClass: 'red-team-card' },
+        { key: 'red2', team: 'Red', colorClass: 'red-team-card' },
+        { key: 'blue1', team: 'Blue', colorClass: 'blue-team-card' },
+        { key: 'blue2', team: 'Blue', colorClass: 'blue-team-card' }
+    ].filter(({ key, team }) => !(gameState.mode === 'practice' && team === 'Blue'));
+
+    const playerCards = allPlayers.filter(({ key }) => {
+        const p = gameState.players[key] || { side: '' };
+        if (statsMode === 'left') return (p.side || '').toLowerCase() === 'left';
+        if (statsMode === 'right') return (p.side || '').toLowerCase() === 'right';
+        return true;
+    });
+
+    const overallStats = allPlayers.reduce((totals, { key, team }) => {
+        const p = gameState.players[key] || { totalPts: 0, inningsCount: 0, totalHoles: 0, totalBoards: 0 };
+        totals.totalPts += Number(p.totalPts || 0);
+        totals.inningsCount += Number(p.inningsCount || 0);
+        totals.totalHoles += Number(p.totalHoles || 0);
+        totals.totalBoards += Number(p.totalBoards || 0);
+        totals.throwCount += Number(p.inningsCount || 0) * 4;
+        return totals;
+    }, { totalPts: 0, inningsCount: 0, totalHoles: 0, totalBoards: 0, throwCount: 0 });
+
+    const overallAvg = overallStats.inningsCount > 0 ? (overallStats.totalPts / overallStats.inningsCount).toFixed(1) : '0.0';
+    const overallHolePercent = overallStats.throwCount > 0 ? ((overallStats.totalHoles / overallStats.throwCount) * 100).toFixed(1) : '0.0';
+    const overallBoardPercent = overallStats.throwCount > 0 ? ((overallStats.totalBoards / overallStats.throwCount) * 100).toFixed(1) : '0.0';
+    const overallMisses = overallStats.throwCount - overallStats.totalBoards - overallStats.totalHoles;
+    const overallMissPercent = overallStats.throwCount > 0 ? ((overallMisses / overallStats.throwCount) * 100).toFixed(1) : '0.0';
+
+    if (statsMode === 'overall' || statsMode === 'all') {
+        const overallCard = document.createElement('div');
+        overallCard.className = 'player-stat-card blue-team-card';
+        overallCard.innerHTML = `
+            <div class="player-card-header">
+                <div>
+                    <span class="team-badge blue-badge">OVERALL</span>
+                    <h3>Team Totals</h3>
+                </div>
+                <div class="highlight-metrics-group">
+                    <div class="highlight-metric-box">
+                        <span class="metric-label">AVG / INNING</span>
+                        <span class="metric-value">${overallAvg}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-value">${overallStats.totalPts}</span>
+                    <span class="stat-label">Total Points</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value">${overallStats.inningsCount * 4}</span>
+                    <span class="stat-label">Total Throws</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value">${overallStats.totalHoles} (${overallHolePercent}%)</span>
+                    <span class="stat-label">Hole</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value">${overallStats.totalBoards} (${overallBoardPercent}%)</span>
+                    <span class="stat-label">Board</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value">${overallMisses} (${overallMissPercent}%)</span>
+                    <span class="stat-label">Misses</span>
+                </div>
+            </div>
+        `;
+        container.appendChild(overallCard);
+    }
+
+    if (statsMode === 'overall') return;
+
     const boards = [
         {
             title: 'Board 1 Players',
@@ -1485,7 +1558,6 @@ function renderStatsTab() {
     }
 
     boards.forEach(board => {
-        // Create Board Section Header
         const boardHeader = document.createElement('h3');
         boardHeader.className = 'board-stats-header';
         boardHeader.textContent = board.title;
@@ -1496,7 +1568,6 @@ function renderStatsTab() {
 
         board.players.forEach(({ key, team, colorClass }) => {
             if (gameState.mode === 'practice' && team === 'Blue') return;
-
             const p = gameState.players[key] || { name: '', side: '', totalPts: 0, inningsCount: 0, totalHoles: 0, totalBoards: 0 };
             const safeName = getPlayerDisplayName(key, document.getElementById(
                 key === 'blue1' ? 'blue-player-1' :
@@ -1505,16 +1576,15 @@ function renderStatsTab() {
                 'blue-player-2'
             )?.value || getPlayerLabelFallback(key));
             const safeSide = p.side || (team === 'Blue' ? 'Left' : 'Right');
+
+            if (statsMode === 'left' && safeSide.toLowerCase() !== 'left') return;
+            if (statsMode === 'right' && safeSide.toLowerCase() !== 'right') return;
+
             const avgPerInning = p.inningsCount > 0 ? (p.totalPts / p.inningsCount).toFixed(1) : '0.0';
-
             const boardPercent = p.totalBoards + p.totalHoles > 0 ? ((p.totalBoards / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
-
             const holePercent = p.totalBoards + p.totalHoles > 0 ? ((p.totalHoles / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
-
             const misses = p.totalBoards + p.totalHoles > 0 ? (p.inningsCount*4 - p.totalBoards - p.totalHoles).toFixed(0) : '0';
-
             const missPercent = p.totalBoards + p.totalHoles > 0 ? (((p.inningsCount*4 - p.totalBoards - p.totalHoles) / (p.inningsCount*4)) * 100).toFixed(1) : '0.0';
-            
             const netVal = netScores[key];
             let netDisplay = 'N/A';
             let netColorClass = 'net-neutral';
@@ -1577,7 +1647,9 @@ function renderStatsTab() {
             boardGrid.appendChild(card);
         });
 
-        container.appendChild(boardGrid);
+        if (boardGrid.children.length > 0) {
+            container.appendChild(boardGrid);
+        }
     });
 }
 

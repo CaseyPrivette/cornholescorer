@@ -172,6 +172,15 @@
         <div id="tab-stats" class="tab-content">
             <section class="card">
                 <h2>Match Player Statistics</h2>
+                <div class="stats-filter-row">
+                    <label for="stats-side-sort">Sort by board side</label>
+                    <select id="stats-side-sort" onchange="renderStatsTab()">
+                        <option value="all">All players</option>
+                        <option value="left">Left side</option>
+                        <option value="right">Right side</option>
+                        <option value="overall">Overall only</option>
+                    </select>
+                </div>
                 <div id="stats-container" class="stats-container">
                     <!-- Stat cards dynamically rendered via JS -->
                 </div>

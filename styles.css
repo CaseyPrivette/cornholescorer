@@ -311,6 +311,29 @@ canvas {
 }
 
 /* PLAYER STAT CARDS & METRIC HIGHLIGHTS */
+.stats-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.stats-filter-row label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.stats-filter-row select {
+    min-width: 180px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #f8fafc;
+}
+
 .stats-container {
     display: flex;
     flex-direction: column;
