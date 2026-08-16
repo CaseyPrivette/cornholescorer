@@ -1,3 +1,15 @@
+let playerChartState = {
+    trend: [],
+    histogram: []
+};
+
+function resizePlayerCharts() {
+    renderPlayerTrendChart(playerChartState.trend);
+    renderPlayerScoreHistogram(playerChartState.histogram);
+}
+
+window.addEventListener('resize', resizePlayerCharts);
+
 // MATCH STATE
 let gameState = {
     gameNumber: null,
@@ -242,11 +254,13 @@ async function saveMatchToSheet() {
 }
 
 function renderPlayerTrendChart(gameSeries) {
+    playerChartState.trend = gameSeries || [];
+
     const canvas = document.getElementById('player-trend-chart');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const width = canvas.clientWidth || 600;
+    const width = Math.max(canvas.getBoundingClientRect().width || canvas.clientWidth || 300, 280);
     const height = 220;
     const dpr = window.devicePixelRatio || 1;
 
@@ -376,11 +390,13 @@ function renderPlayerTrendChart(gameSeries) {
 }
 
 function renderPlayerScoreHistogram(distribution) {
+    playerChartState.histogram = distribution || [];
+
     const canvas = document.getElementById('player-score-histogram');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    const width = canvas.clientWidth || 600;
+    const width = Math.max(canvas.getBoundingClientRect().width || canvas.clientWidth || 300, 280);
     const height = 220;
     const dpr = window.devicePixelRatio || 1;
 
@@ -411,11 +427,11 @@ function renderPlayerScoreHistogram(distribution) {
         return;
     }
 
-    const maxCount = Math.max(...distribution.map(item => item.count), 1);
-    const minScore = Math.min(...distribution.map(item => item.score), 0);
-    const maxScore = Math.max(...distribution.map(item => item.score), 0);
+    const maxCount = Math.max(...distribution.map(item => (item.recent || 0) + (item.other || 0)), 1);
     const bucketCount = distribution.length;
-    const barWidth = plotWidth / Math.max(bucketCount, 1) * 0.72;
+    const gap = 8;
+    const barWidth = (plotWidth - gap * Math.max(bucketCount - 1, 0)) / Math.max(bucketCount, 1);
+    const hitAreas = [];
 
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 1;
@@ -442,50 +458,65 @@ function renderPlayerScoreHistogram(distribution) {
     }
 
     distribution.forEach((bucket, index) => {
-        const x = padding.left + (index / Math.max(bucketCount, 1)) * plotWidth + 10;
-        const barHeight = (bucket.count / maxCount) * plotHeight;
-        const y = height - padding.bottom - barHeight;
+        const x = padding.left + index * (barWidth + gap);
+        const total = (bucket.recent || 0) + (bucket.other || 0);
+        const recentHeight = total > 0 ? (bucket.recent / maxCount) * plotHeight : 0;
+        const otherHeight = total > 0 ? (bucket.other / maxCount) * plotHeight : 0;
+        const baseY = height - padding.bottom;
+        const otherY = baseY - otherHeight;
+        const recentY = otherY - recentHeight;
+
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(x, otherY, barWidth, otherHeight);
 
         ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(x, y, Math.max(barWidth, 8), barHeight);
+        ctx.fillRect(x, recentY, barWidth, recentHeight);
 
         ctx.fillStyle = '#94a3b8';
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(String(bucket.score), x + Math.max(barWidth, 8) / 2, height - 10);
+        ctx.fillText(String(bucket.score), x + barWidth / 2, height - 10);
 
-        const hitArea = {
+        hitAreas.push({
             x,
-            y,
-            width: Math.max(barWidth, 8),
-            height: barHeight,
+            y: recentY,
+            width: barWidth,
+            height: recentHeight + otherHeight,
             bucket
-        };
-
-        canvas.onmousemove = (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
-            const inside = mouseX >= hitArea.x && mouseX <= hitArea.x + hitArea.width && mouseY >= hitArea.y && mouseY <= hitArea.y + hitArea.height;
-
-            if (!inside) {
-                tooltip.style.display = 'none';
-                return;
-            }
-
-            tooltip.innerHTML = `<strong>Score ${hitArea.bucket.score}</strong><br>Turns: ${hitArea.bucket.count}`;
-            tooltip.style.left = `${event.clientX + 14}px`;
-            tooltip.style.top = `${event.clientY + 14}px`;
-            tooltip.style.display = 'block';
-        };
+        });
     });
 
-    if (distribution.length > 0) {
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Points', width / 2, height - 2);
-    }
+    canvas.onmousemove = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const active = hitAreas.find(area => (
+            mouseX >= area.x &&
+            mouseX <= area.x + area.width &&
+            mouseY >= area.y &&
+            mouseY <= area.y + area.height
+        ));
+
+        if (!active) {
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        tooltip.innerHTML = `
+            <strong>Score ${active.bucket.score}</strong><br>
+            Last 10: ${active.bucket.recent || 0}<br>
+            Other throws: ${active.bucket.other || 0}
+        `;
+        tooltip.style.left = `${event.clientX + 14}px`;
+        tooltip.style.top = `${event.clientY + 14}px`;
+        tooltip.style.display = 'block';
+    };
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Points', width / 2, height - 2);
 }
 
 async function loadPlayerDatabaseStats() {
@@ -548,6 +579,33 @@ async function loadPlayerDatabaseStats() {
             }
         });
 
+        const allGameLogs = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data) allGameLogs.push(data);
+        });
+
+        const perGameInningScores = {};
+        allGameLogs.forEach(log => {
+            const gameNumber = Number(log.gameNumber || 0);
+            const inningNumber = Number(log.inningNumber || log.inning || 0);
+            if (!gameNumber || !inningNumber) return;
+
+            if (!perGameInningScores[gameNumber]) {
+                perGameInningScores[gameNumber] = {};
+            }
+
+            if (!perGameInningScores[gameNumber][inningNumber]) {
+                perGameInningScores[gameNumber][inningNumber] = { Red: 0, Blue: 0 };
+            }
+
+            if (log.team === 'Red') {
+                perGameInningScores[gameNumber][inningNumber].Red += Number(log.inningScore || 0);
+            } else if (log.team === 'Blue') {
+                perGameInningScores[gameNumber][inningNumber].Blue += Number(log.inningScore || 0);
+            }
+        });
+
         const playerGameMap = {};
         playerLogs.forEach(log => {
             const gameNumber = Number(log.gameNumber || 0);
@@ -557,56 +615,62 @@ async function loadPlayerDatabaseStats() {
                 playerGameMap[gameNumber] = {
                     team: log.team,
                     totalPoints: 0,
-                    innings: 0
+                    innings: 0,
+                    net: 0
                 };
             }
 
+            const inningNumber = Number(log.inningNumber || log.inning || 0);
+            const opponentScore = log.team === 'Red'
+                ? (perGameInningScores[gameNumber]?.[inningNumber]?.Blue || 0)
+                : (perGameInningScores[gameNumber]?.[inningNumber]?.Red || 0);
+
             playerGameMap[gameNumber].totalPoints += Number(log.inningScore || 0);
             playerGameMap[gameNumber].innings += 1;
-        });
-
-        const matchSnapshot = await getDocs(collection(window.db, 'matches'));
-        const scoreByGame = {};
-        matchSnapshot.forEach(doc => {
-            const data = doc.data();
-            if (!data || data.gameNumber === undefined || data.gameNumber === null) return;
-            const gameNumber = Number(data.gameNumber);
-            if (!gameNumber) return;
-            scoreByGame[gameNumber] = {
-                redScore: Number(data.redScore || 0),
-                blueScore: Number(data.blueScore || 0)
-            };
+            playerGameMap[gameNumber].net += Number(log.inningScore || 0) - opponentScore;
         });
 
         const sortedGames = Object.entries(playerGameMap)
-            .map(([gameNumber, stats]) => {
-                const number = Number(gameNumber);
-                const score = scoreByGame[number] || { redScore: 0, blueScore: 0 };
-                let net = 0;
-
-                if (stats.team === 'Red') {
-                    net = score.redScore - score.blueScore;
-                } else if (stats.team === 'Blue') {
-                    net = score.blueScore - score.redScore;
-                }
-
-                return {
-                    gameNumber: number,
-                    avgPerInning: stats.innings > 0 ? Number((stats.totalPoints / stats.innings).toFixed(2)) : 0,
-                    net: Number(net)
-                };
-            })
+            .map(([gameNumber, stats]) => ({
+                gameNumber: Number(gameNumber),
+                avgPerInning: stats.innings > 0 ? Number((stats.totalPoints / stats.innings).toFixed(2)) : 0,
+                net: Number(stats.net)
+            }))
             .sort((a, b) => a.gameNumber - b.gameNumber)
             .slice(-10);
+
+        const recentGameNumbers = Array.from(
+            new Set(
+                playerLogs
+                    .map(log => Number(log.gameNumber || 0))
+                    .filter(Boolean)
+                    .sort((a, b) => a - b)
+                    .slice(-10)
+            )
+        );
+        const recentGameSet = new Set(recentGameNumbers);
 
         const scoreDistribution = {};
         playerLogs.forEach(log => {
             const score = Number(log.inningScore || 0);
-            scoreDistribution[score] = (scoreDistribution[score] || 0) + 1;
+            const gameNumber = Number(log.gameNumber || 0);
+            if (!scoreDistribution[score]) {
+                scoreDistribution[score] = { score, recent: 0, other: 0 };
+            }
+
+            if (recentGameSet.has(gameNumber)) {
+                scoreDistribution[score].recent += 1;
+            } else {
+                scoreDistribution[score].other += 1;
+            }
         });
 
         const histogramData = Object.entries(scoreDistribution)
-            .map(([score, count]) => ({ score: Number(score), count }))
+            .map(([score, counts]) => ({
+                score: Number(score),
+                recent: counts.recent || 0,
+                other: counts.other || 0
+            }))
             .sort((a, b) => a.score - b.score);
 
         const gamesPlayed = sortedGames.length;

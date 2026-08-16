@@ -122,6 +122,20 @@ body {
 
 .mt-20 { margin-top: 20px; }
 
+canvas {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: 220px;
+}
+
+#player-trend-chart,
+#player-score-histogram {
+    width: 100%;
+    max-width: 100%;
+    height: 220px;
+}
+
 /* SETUP GRID */
 .team-setup-grid {
     display: grid;
