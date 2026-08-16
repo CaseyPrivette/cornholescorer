@@ -741,7 +741,7 @@ async function loadPlayerDatabaseStats() {
             playerGameMap[gameNumber].net += Number(log.inningScore || 0) - opponentScore;
         });
 
-        const sortedGames = Object.entries(playerGameMap)
+        const allGames = Object.entries(playerGameMap)
             .map(([gameNumber, stats]) => {
                 const gameNum = Number(gameNumber);
                 
@@ -787,8 +787,9 @@ async function loadPlayerDatabaseStats() {
                     partnerOpponent: partnerOpponents.length > 0 ? partnerOpponents[0] : 'Unknown'
                 };
             })
-            .sort((a, b) => a.gameNumber - b.gameNumber)
-            .slice(-10);
+            .sort((a, b) => a.gameNumber - b.gameNumber);
+
+        const sortedGames = allGames.slice(-10);
 
         const recentGameNumbers = Array.from(
             new Set(
@@ -824,7 +825,7 @@ async function loadPlayerDatabaseStats() {
             }))
             .sort((a, b) => a.score - b.score);
 
-        const gamesPlayed = sortedGames.length;
+        const gamesPlayed = allGames.length;
         const totalInnings = filteredPlayerLogs.length;
         const totalPossiblePoints = totalInnings * 12;
         const totalPoints = filteredPlayerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
@@ -840,27 +841,35 @@ async function loadPlayerDatabaseStats() {
         const boardPercent = totalThrows > 0 ? ((totalBoards / totalThrows) * 100).toFixed(1) : '0.0';
         const missPercent = totalThrows > 0 ? ((totalMisses / totalThrows) * 100).toFixed(1) : '0.0';
         
-        // Calculate win/loss record based on team score >= 21
+        // Calculate win/loss record based on the player's team total for each game.
+        // Use filtered logs so the record respects the selected board-side filter.
+        const teamTotalsByGame = {};
+        filteredPlayerLogs.forEach(log => {
+            const gameNumber = Number(log.gameNumber || 0);
+            const team = log.team || 'Unknown';
+            if (!gameNumber) return;
+
+            if (!teamTotalsByGame[gameNumber]) {
+                teamTotalsByGame[gameNumber] = { Red: 0, Blue: 0 };
+            }
+
+            teamTotalsByGame[gameNumber][team] += Number(log.inningScore || 0);
+        });
+
         let wins = 0;
         let losses = 0;
-        
-        sortedGames.forEach(game => {
-            // Get all logs for this game to calculate team totals
-            const gameLogs = allGameLogs.filter(log => Number(log.gameNumber || 0) === game.gameNumber);
-            const teamScores = { Red: 0, Blue: 0 };
-            
-            gameLogs.forEach(log => {
-                teamScores[log.team] += Number(log.inningScore || 0);
-            });
-            
-            // Check if player's team scored >= 21
-            if (teamScores[game.playerTeam] >= 21) {
+        Object.entries(teamTotalsByGame).forEach(([gameNumber, totals]) => {
+            const game = allGames.find(entry => entry.gameNumber === Number(gameNumber));
+            if (!game) return;
+
+            const teamTotal = totals[game.playerTeam] || 0;
+            if (teamTotal >= 21) {
                 wins++;
             } else {
                 losses++;
             }
         });
-        
+
         const winLossRecord = `${wins}-${losses}`;
         
         const overallNet = filteredPlayerLogs.reduce((sum, log) => {
