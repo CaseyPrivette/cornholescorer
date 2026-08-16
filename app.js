@@ -824,7 +824,7 @@ async function loadPlayerDatabaseStats() {
             }))
             .sort((a, b) => a.score - b.score);
 
-        const gamesPlayed = new filteredPlayerLogs.set(log.gameNumber).size;
+        const gamesPlayed = filteredPlayerLogs.set(log.gameNumber).size;
         const totalInnings = filteredPlayerLogs.length;
         const totalPossiblePoints = totalInnings * 12;
         const totalPoints = filteredPlayerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
