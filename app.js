@@ -779,6 +779,7 @@ async function loadPlayerDatabaseStats() {
                 
                 return {
                     gameNumber: gameNum,
+                    playerTeam: playerTeam,
                     avgPerInning: stats.innings > 0 ? Number((stats.totalPoints / stats.innings).toFixed(2)) : 0,
                     net: Number(stats.net),
                     opponent: opponents.length > 0 ? opponents[0] : 'Unknown',
@@ -828,6 +829,40 @@ async function loadPlayerDatabaseStats() {
         const totalPossiblePoints = totalInnings * 12;
         const totalPoints = filteredPlayerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
         const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
+        
+        // Calculate hole, board, and miss stats
+        const totalHoles = filteredPlayerLogs.filter(log => log.hole).length;
+        const totalBoards = filteredPlayerLogs.filter(log => log.board).length;
+        const totalMisses = filteredPlayerLogs.filter(log => log.missed).length;
+        const totalThrows = filteredPlayerLogs.length;
+        
+        const holePercent = totalThrows > 0 ? ((totalHoles / totalThrows) * 100).toFixed(1) : '0.0';
+        const boardPercent = totalThrows > 0 ? ((totalBoards / totalThrows) * 100).toFixed(1) : '0.0';
+        const missPercent = totalThrows > 0 ? ((totalMisses / totalThrows) * 100).toFixed(1) : '0.0';
+        
+        // Calculate win/loss record based on team score >= 21
+        let wins = 0;
+        let losses = 0;
+        
+        sortedGames.forEach(game => {
+            // Get all logs for this game to calculate team totals
+            const gameLogs = allGameLogs.filter(log => Number(log.gameNumber || 0) === game.gameNumber);
+            const teamScores = { Red: 0, Blue: 0 };
+            
+            gameLogs.forEach(log => {
+                teamScores[log.team] += Number(log.inningScore || 0);
+            });
+            
+            // Check if player's team scored >= 21
+            if (teamScores[game.playerTeam] >= 21) {
+                wins++;
+            } else {
+                losses++;
+            }
+        });
+        
+        const winLossRecord = `${wins}-${losses}`;
+        
         const overallNet = filteredPlayerLogs.reduce((sum, log) => {
             const inningNumber = Number(log.inningNumber || log.inning || 0);
             const gameNumber = Number(log.gameNumber || 0);
@@ -883,8 +918,24 @@ async function loadPlayerDatabaseStats() {
                             <span class="stat-label">Avg / Inning</span>
                         </div>
                         <div class="stat-box">
+                            <span class="stat-value">${winLossRecord}</span>
+                            <span class="stat-label">Win Loss Record</span>
+                        </div>
+                        <div class="stat-box">
                             <span class="stat-value">${overallNet >= 0 ? '+' : ''}${overallNet}</span>
                             <span class="stat-label">Overall Net</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">${totalHoles} (${holePercent}%)</span>
+                            <span class="stat-label">Total Hole</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">${totalBoards} (${boardPercent}%)</span>
+                            <span class="stat-label">Total Board</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">${totalMisses} (${missPercent}%)</span>
+                            <span class="stat-label">Total Miss</span>
                         </div>
                         <div class="stat-box">
                             <span class="stat-value">${totalPoints} / ${totalPossiblePoints}</span>
