@@ -831,9 +831,9 @@ async function loadPlayerDatabaseStats() {
         const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
         
         // Calculate hole, board, and miss stats
-        const totalHoles = filteredPlayerLogs.filter(log => sum(log.hole));
-        const totalBoards = filteredPlayerLogs.filter(log => sum(log.board));
-        const totalMisses = filteredPlayerLogs.filter(log => sum(log.missed));
+        const totalHoles = filteredPlayerLogs.reduce((sum, log) => sum + Number(log.hole || 0), 0);
+        const totalBoards = filteredPlayerLogs.reduce((sum, log) => sum + Number(log.board || 0), 0);
+        const totalMisses = filteredPlayerLogs.reduce((sum, log) => sum + Number(log.missed || 0), 0);
         const totalThrows = totalHoles + totalBoards + totalMisses;
         
         const holePercent = totalThrows > 0 ? ((totalHoles / totalThrows) * 100).toFixed(1) : '0.0';
