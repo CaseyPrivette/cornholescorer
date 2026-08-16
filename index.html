@@ -182,76 +182,104 @@
         <div id="tab-player-stats" class="tab-content">
             <section class="card">
                 <h2>Player Performance</h2>
-                <div class="stats-filter-row">
-                    <span class="stats-filter-label">View:</span>
-                    <div class="side-radio-group" role="radiogroup" aria-label="Stats filter by board side">
-                        <label class="side-radio-option">
-                            <input type="radio" name="stats-side-filter" value="all" checked onchange="loadPlayerDatabaseStats()">
-                            <span>Overall</span>
-                        </label>
-                        <label class="side-radio-option">
-                            <input type="radio" name="stats-side-filter" value="right" onchange="loadPlayerDatabaseStats()">
-                            <span>Right</span>
-                        </label>
-                        <label class="side-radio-option">
-                            <input type="radio" name="stats-side-filter" value="left" onchange="loadPlayerDatabaseStats()">
-                            <span>Left</span>
-                        </label>
-                    </div>
+
+                <div class="player-stats-subtabs" role="tablist" aria-label="Player stats tabs">
+                    <button type="button" class="player-stat-subtab active" data-tab="summary" onclick="switchPlayerStatsTab('summary')">Stats Summary</button>
+                    <button type="button" class="player-stat-subtab" data-tab="history" onclick="switchPlayerStatsTab('history')">Game History</button>
                 </div>
-                <div class="form-group">
-                    <label for="player-stats-select">Select Player</label>
-                    <select id="player-stats-select" class="player-select">
-                        <option value="">Loading roster...</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="loadPlayerDatabaseStats()">Load Player Stats</button>
-                <div id="player-stats-results" class="stats-container mt-20">
-                    <div class="player-stat-card">
-                        <div class="player-card-header">
-                            <div>
-                                <span class="team-badge red-badge">PLAYER</span>
-                                <h3>Select a player</h3>
-                            </div>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-box">
-                                <span class="stat-value">0</span>
-                                <span class="stat-label">Games Played</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="stat-value">0.00</span>
-                                <span class="stat-label">Avg / Inning</span>
-                            </div>
+
+                <div id="player-stats-summary-panel" class="player-stats-panel active">
+                    <div class="stats-filter-row">
+                        <span class="stats-filter-label">View:</span>
+                        <div class="side-radio-group" role="radiogroup" aria-label="Stats filter by board side">
+                            <label class="side-radio-option">
+                                <input type="radio" name="stats-side-filter" value="all" checked onchange="loadPlayerDatabaseStats()">
+                                <span>Overall</span>
+                            </label>
+                            <label class="side-radio-option">
+                                <input type="radio" name="stats-side-filter" value="right" onchange="loadPlayerDatabaseStats()">
+                                <span>Right</span>
+                            </label>
+                            <label class="side-radio-option">
+                                <input type="radio" name="stats-side-filter" value="left" onchange="loadPlayerDatabaseStats()">
+                                <span>Left</span>
+                            </label>
                         </div>
                     </div>
-                </div>
-
-                <div class="mt-20">
-                    <h3>Turn Score Distribution</h3>
-                    <div class="chart-legend" aria-label="Score distribution legend">
-                        <span class="chart-legend-item">
-                            <span class="legend-swatch legend-recent"></span>
-                            Last 10 turns
-                        </span>
-                        <span class="chart-legend-item">
-                            <span class="legend-swatch legend-other"></span>
-                            Other throws
-                        </span>
+                    <div class="form-group">
+                        <label for="player-stats-select">Select Player</label>
+                        <select id="player-stats-select" class="player-select">
+                            <option value="">Loading roster...</option>
+                        </select>
                     </div>
-                    <canvas id="player-score-histogram" height="220" aria-label="Player score distribution histogram"></canvas>
+                    <button class="btn btn-primary btn-block" onclick="loadPlayerDatabaseStats()">Load Player Stats</button>
+                    <div id="player-stats-results" class="stats-container mt-20">
+                        <div class="player-stat-card">
+                            <div class="player-card-header">
+                                <div>
+                                    <span class="team-badge red-badge">PLAYER</span>
+                                    <h3>Select a player</h3>
+                                </div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-box">
+                                    <span class="stat-value">0</span>
+                                    <span class="stat-label">Games Played</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-value">0.00</span>
+                                    <span class="stat-label">Avg / Inning</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-20">
+                        <h3>Turn Score Distribution</h3>
+                        <div class="chart-legend" aria-label="Score distribution legend">
+                            <span class="chart-legend-item">
+                                <span class="legend-swatch legend-recent"></span>
+                                Last 10 turns
+                            </span>
+                            <span class="chart-legend-item">
+                                <span class="legend-swatch legend-other"></span>
+                                Other turns
+                            </span>
+                        </div>
+                        <canvas id="player-score-histogram" height="220" aria-label="Player score distribution histogram"></canvas>
+                    </div>
+
+                    <div class="mt-20">
+                        <h3>Last 10 Games Avg</h3>
+                        <canvas id="player-trend-chart" height="220" aria-label="Player average points trend chart"></canvas>
+                    </div>
+
+                    <div class="mt-20">
+                        <h3>Net Score vs. Opponents</h3>
+                        <div id="player-opponent-net-table" class="opponent-net-table-wrap"></div>
+                    </div>
                 </div>
 
-                <div class="mt-20">
-                    <h3>Last 10 Games Avg</h3>
-                    <canvas id="player-trend-chart" height="220" aria-label="Player average points trend chart"></canvas>
+                <div id="player-stats-history-panel" class="player-stats-panel">
+                    <div class="table-responsive">
+                        <table class="log-table player-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Game #</th>
+                                    <th>Board Side</th>
+                                    <th>Opponent</th>
+                                    <th>Red Team Score</th>
+                                    <th>Blue Team Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="player-game-history-body">
+                                <tr>
+                                    <td colspan="5">No game history available.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
-                <div class="mt-20">
-                    <h3>Net Score vs. Opponents</h3>
-                    <div id="player-opponent-net-table" class="opponent-net-table-wrap"></div>
-                </div>
-
             </section>
         </div>
 

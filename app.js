@@ -54,6 +54,16 @@ function switchTab(tabId) {
     }
 }
 
+function switchPlayerStatsTab(tabName) {
+    document.querySelectorAll('.player-stats-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `player-stats-${tabName}-panel`);
+    });
+
+    document.querySelectorAll('.player-stat-subtab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+}
+
 // SETUP TOGGLES
 function toggleGameMode() {
     const mode = document.getElementById('game-mode').value;
@@ -914,6 +924,7 @@ async function loadPlayerDatabaseStats() {
         renderPlayerTrendChart(sortedGames);
         renderPlayerScoreHistogram(histogramData);
         renderPlayerOpponentNetTable(Object.values(opponentNetMap));
+        renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLogs, statsSideFilter);
 
         if (resultsContainer) {
             resultsContainer.innerHTML = `
@@ -966,6 +977,7 @@ async function loadPlayerDatabaseStats() {
         renderPlayerTrendChart([]);
         renderPlayerScoreHistogram([]);
         renderPlayerOpponentNetTable([]);
+        renderPlayerGameHistoryTable(playerName, [], [], statsSideFilter);
         if (resultsContainer) {
             resultsContainer.innerHTML = `
                 <div class="player-stat-card">
@@ -988,6 +1000,71 @@ async function loadPlayerDatabaseStats() {
 // ============================================================================
 // THROW INPUT BUTTON BUILDER
 // ============================================================================
+
+function renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLogs, statsSideFilter = 'all') {
+    const tableBody = document.getElementById('player-game-history-body');
+    if (!tableBody) return;
+
+    if (!playerName || !filteredPlayerLogs.length) {
+        tableBody.innerHTML = '<tr><td colspan="5">No game history available.</td></tr>';
+        return;
+    }
+
+    const groupedByGame = {};
+    filteredPlayerLogs.forEach(log => {
+        const gameNumber = Number(log.gameNumber || 0);
+        if (!gameNumber) return;
+        if (!groupedByGame[gameNumber]) groupedByGame[gameNumber] = [];
+        groupedByGame[gameNumber].push(log);
+    });
+
+    const rows = Object.entries(groupedByGame)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([gameNumber, logs]) => {
+            const gameLogs = allGameLogs.filter(entry => Number(entry.gameNumber || 0) === Number(gameNumber));
+            const playerLogsForGame = logs.filter(log => log.playerName === playerName);
+            if (!playerLogsForGame.length) return null;
+
+            const gameSide = playerLogsForGame[0].boardSide || playerLogsForGame[0].side || (statsSideFilter !== 'all' ? statsSideFilter : 'Unknown');
+            const playerTeam = playerLogsForGame[0].team || 'Unknown';
+            const opposingTeam = playerTeam === 'Red' ? 'Blue' : 'Red';
+            const opponentNames = [...new Set(
+                gameLogs
+                    .filter(entry => entry.team === opposingTeam && entry.playerName !== playerName)
+                    .map(entry => entry.playerName || 'Unknown')
+            )];
+
+            const teamScores = { Red: 0, Blue: 0 };
+            gameLogs.forEach(entry => {
+                const team = entry.team || 'Unknown';
+                teamScores[team] = (teamScores[team] || 0) + Number(entry.inningScore || 0);
+            });
+
+            return {
+                gameNumber: Number(gameNumber),
+                side: gameSide,
+                opponent: opponentNames.length ? opponentNames.join(', ') : 'Unknown',
+                redScore: teamScores.Red || 0,
+                blueScore: teamScores.Blue || 0
+            };
+        })
+        .filter(Boolean);
+
+    if (!rows.length) {
+        tableBody.innerHTML = '<tr><td colspan="5">No game history available.</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = rows.map(row => `
+        <tr>
+            <td>${row.gameNumber}</td>
+            <td>${row.side}</td>
+            <td>${row.opponent}</td>
+            <td>${row.redScore}</td>
+            <td>${row.blueScore}</td>
+        </tr>
+    `).join('');
+}
 
 function buildInputButtonGroups() {
     createButtonGroup('red-board-boxes', 4, (val) => setThrowValue('redBoard', val));
