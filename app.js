@@ -253,6 +253,102 @@ async function saveMatchToSheet() {
     }
 }
 
+let playerOpponentNetTableState = {
+    rows: [],
+    sortKey: 'netScore',
+    sortDirection: 'desc'
+};
+
+function renderPlayerOpponentNetTable(rows, sortKey = 'netScore', sortDirection = 'desc') {
+    const container = document.getElementById('player-opponent-net-table');
+    if (!container) return;
+
+    playerOpponentNetTableState.rows = rows || [];
+    playerOpponentNetTableState.sortKey = sortKey;
+    playerOpponentNetTableState.sortDirection = sortDirection;
+
+    const getSortArrow = (key) => {
+        if (playerOpponentNetTableState.sortKey !== key) return '';
+        return playerOpponentNetTableState.sortDirection === 'asc' ? ' ↑' : ' ↓';
+    };
+
+    const sortedRows = [...playerOpponentNetTableState.rows].sort((a, b) => {
+        const direction = playerOpponentNetTableState.sortDirection === 'asc' ? 1 : -1;
+        const aVal = a[playerOpponentNetTableState.sortKey];
+        const bVal = b[playerOpponentNetTableState.sortKey];
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+            return aVal.localeCompare(bVal) * direction;
+        }
+
+        return (Number(aVal) - Number(bVal)) * direction;
+    });
+
+    if (!sortedRows || sortedRows.length === 0) {
+        container.innerHTML = `
+            <table class="opponent-net-table">
+                <thead>
+                    <tr>
+                        <th data-sort="opponent" class="sortable-header">Opponent${getSortArrow('opponent')}</th>
+                        <th data-sort="commonInnings" class="sortable-header">Common Innings${getSortArrow('commonInnings')}</th>
+                        <th data-sort="netScore" class="sortable-header">Net Score${getSortArrow('netScore')}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3">No shared innings found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        attachOpponentNetTableSortHandlers();
+        return;
+    }
+
+    container.innerHTML = `
+        <table class="opponent-net-table">
+            <thead>
+                <tr>
+                    <th data-sort="opponent" class="sortable-header">Opponent${getSortArrow('opponent')}</th>
+                    <th data-sort="commonInnings" class="sortable-header">Common Innings${getSortArrow('commonInnings')}</th>
+                    <th data-sort="netScore" class="sortable-header">Net Score${getSortArrow('netScore')}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sortedRows.map(row => {
+                    const netClass = row.netScore > 0 ? 'net-positive' : row.netScore < 0 ? 'net-negative' : 'net-neutral';
+                    const sign = row.netScore > 0 ? '+' : '';
+                    return `
+                        <tr>
+                            <td>${row.opponent}</td>
+                            <td>${row.commonInnings}</td>
+                            <td class="${netClass}">${sign}${row.netScore}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    attachOpponentNetTableSortHandlers();
+}
+
+function attachOpponentNetTableSortHandlers() {
+    const container = document.getElementById('player-opponent-net-table');
+    if (!container) return;
+
+    const headers = container.querySelectorAll('th[data-sort]');
+    headers.forEach(header => {
+        header.onclick = () => {
+            const key = header.dataset.sort;
+            const nextDirection = playerOpponentNetTableState.sortKey === key && playerOpponentNetTableState.sortDirection === 'asc'
+                ? 'desc'
+                : 'asc';
+            renderPlayerOpponentNetTable(playerOpponentNetTableState.rows, key, nextDirection);
+        };
+    });
+}
+
 function renderPlayerTrendChart(gameSeries) {
     playerChartState.trend = gameSeries || [];
 
@@ -675,11 +771,44 @@ async function loadPlayerDatabaseStats() {
 
         const gamesPlayed = sortedGames.length;
         const totalInnings = playerLogs.length;
+        const totalPossiblePoints = totalInnings * 12;
         const totalPoints = playerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
         const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
+        const overallNet = playerLogs.reduce((sum, log) => {
+            const inningNumber = Number(log.inningNumber || log.inning || 0);
+            const gameNumber = Number(log.gameNumber || 0);
+            const matchLog = allGameLogs.find(entry => {
+                const entryGame = Number(entry.gameNumber || 0);
+                const entryInning = Number(entry.inningNumber || entry.inning || 0);
+                return entryGame === gameNumber && entryInning === inningNumber && entry.team !== log.team;
+            });
+            const opponentScore = matchLog ? Number(matchLog.inningScore || 0) : 0;
+            return sum + (Number(log.inningScore || 0) - opponentScore);
+        }, 0);
+
+        const opponentNetMap = {};
+        playerLogs.forEach(log => {
+            const inningNumber = Number(log.inningNumber || log.inning || 0);
+            const gameNumber = Number(log.gameNumber || 0);
+            const relevantOpponents = allGameLogs.filter(entry => {
+                const entryGame = Number(entry.gameNumber || 0);
+                const entryInning = Number(entry.inningNumber || entry.inning || 0);
+                return entryGame === gameNumber && entryInning === inningNumber && entry.team !== log.team && entry.playerName !== log.playerName;
+            });
+
+            relevantOpponents.forEach(opponent => {
+                const opponentName = opponent.playerName || 'Unknown Opponent';
+                if (!opponentNetMap[opponentName]) {
+                    opponentNetMap[opponentName] = { opponent: opponentName, netScore: 0, commonInnings: 0 };
+                }
+                opponentNetMap[opponentName].commonInnings += 1;
+                opponentNetMap[opponentName].netScore += Number(log.inningScore || 0) - Number(opponent.inningScore || 0);
+            });
+        });
 
         renderPlayerTrendChart(sortedGames);
         renderPlayerScoreHistogram(histogramData);
+        renderPlayerOpponentNetTable(Object.values(opponentNetMap));
 
         if (resultsContainer) {
             resultsContainer.innerHTML = `
@@ -700,12 +829,12 @@ async function loadPlayerDatabaseStats() {
                             <span class="stat-label">Avg / Inning</span>
                         </div>
                         <div class="stat-box">
-                            <span class="stat-value">${totalInnings}</span>
-                            <span class="stat-label">Total Innings</span>
+                            <span class="stat-value">${overallNet >= 0 ? '+' : ''}${overallNet}</span>
+                            <span class="stat-label">Overall Net</span>
                         </div>
                         <div class="stat-box">
-                            <span class="stat-value">${totalPoints}</span>
-                            <span class="stat-label">Total Points</span>
+                            <span class="stat-value">${totalPoints} / ${totalPossiblePoints}</span>
+                            <span class="stat-label">Total/Possible Points</span>
                         </div>
                     </div>
                 </div>
@@ -715,6 +844,7 @@ async function loadPlayerDatabaseStats() {
         console.error('Failed to load player stats:', err);
         renderPlayerTrendChart([]);
         renderPlayerScoreHistogram([]);
+        renderPlayerOpponentNetTable([]);
         if (resultsContainer) {
             resultsContainer.innerHTML = `
                 <div class="player-stat-card">

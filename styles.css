@@ -621,6 +621,93 @@ select[id^="red"]:focus {
     margin-bottom: 24px;
 }
 
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin: 8px 0 10px;
+    color: #cbd5e1;
+    font-size: 0.75rem;
+}
+
+.chart-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.legend-recent {
+    background: #38bdf8;
+}
+
+.legend-other {
+    background: #64748b;
+}
+
+.opponent-net-table-wrap {
+    overflow-x: auto;
+    margin-top: 12px;
+}
+
+.opponent-net-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.opponent-net-table th,
+.opponent-net-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #334155;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.opponent-net-table th {
+    background: #1e293b;
+    color: #94a3b8;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.opponent-net-table th.sortable-header:hover {
+    background: #243244;
+}
+
+.opponent-net-table tbody tr:nth-child(even) {
+    background: rgba(148, 163, 184, 0.04);
+}
+
+.opponent-net-table .net-positive {
+    color: #4ade80;
+    font-weight: 800;
+}
+
+.opponent-net-table .net-negative {
+    color: #f87171;
+    font-weight: 800;
+}
+
+.opponent-net-table .net-neutral {
+    color: #cbd5e1;
+    font-weight: 800;
+}
+
 .chart-tooltip {
     position: fixed;
     z-index: 2000;

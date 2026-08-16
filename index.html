@@ -211,14 +211,30 @@
                 </div>
 
                 <div class="mt-20">
+                    <h3>Turn Score Distribution</h3>
+                    <div class="chart-legend" aria-label="Score distribution legend">
+                        <span class="chart-legend-item">
+                            <span class="legend-swatch legend-recent"></span>
+                            Last 10 throws
+                        </span>
+                        <span class="chart-legend-item">
+                            <span class="legend-swatch legend-other"></span>
+                            Other throws
+                        </span>
+                    </div>
+                    <canvas id="player-score-histogram" height="220" aria-label="Player score distribution histogram"></canvas>
+                </div>
+
+                <div class="mt-20">
                     <h3>Last 10 Games Avg</h3>
                     <canvas id="player-trend-chart" height="220" aria-label="Player average points trend chart"></canvas>
                 </div>
 
                 <div class="mt-20">
-                    <h3>Turn Score Distribution</h3>
-                    <canvas id="player-score-histogram" height="220" aria-label="Player score distribution histogram"></canvas>
+                    <h3>Net Score vs. Opponents</h3>
+                    <div id="player-opponent-net-table" class="opponent-net-table-wrap"></div>
                 </div>
+
             </section>
         </div>
 
