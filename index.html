@@ -15,6 +15,7 @@
             <button class="tab-btn active" onclick="switchTab('setup')">Setup</button>
             <button class="tab-btn" onclick="switchTab('scorekeeping')">Scoring</button>
             <button class="tab-btn" onclick="switchTab('stats')">Game Stats</button>
+            <button class="tab-btn" onclick="switchTab('player-stats')">Player Stats</button>
         </nav>
     </header>
 
@@ -173,6 +174,40 @@
                 <h2>Match Player Statistics</h2>
                 <div id="stats-container" class="stats-container">
                     <!-- Stat cards dynamically rendered via JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 4: FIREBASE PLAYER STATS -->
+        <div id="tab-player-stats" class="tab-content">
+            <section class="card">
+                <h2>Player Performance</h2>
+                <div class="form-group">
+                    <label for="player-stats-select">Select Player</label>
+                    <select id="player-stats-select" class="player-select">
+                        <option value="">Loading roster...</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="loadPlayerDatabaseStats()">Load Player Stats</button>
+                <div id="player-stats-results" class="stats-container mt-20">
+                    <div class="player-stat-card">
+                        <div class="player-card-header">
+                            <div>
+                                <span class="team-badge red-badge">PLAYER</span>
+                                <h3>Select a player</h3>
+                            </div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-value">0</span>
+                                <span class="stat-label">Games Played</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-value">0.00</span>
+                                <span class="stat-label">Avg / Inning</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>

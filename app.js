@@ -27,6 +27,7 @@ let gameState = {
 document.addEventListener('DOMContentLoaded', () => {
     buildInputButtonGroups();
     toggleGameMode();
+    populatePlayerLookupDropdown();
     fetchRosterFromSheet();
 });
 
@@ -146,6 +147,33 @@ function populateRosterDropdowns(playerList = gameState.roster) {
             select.selectedIndex = index;
         }
     });
+
+    populatePlayerLookupDropdown();
+}
+
+function populatePlayerLookupDropdown() {
+    const select = document.getElementById('player-stats-select');
+    if (!select) return;
+
+    select.innerHTML = '';
+    const roster = [...gameState.roster];
+
+    if (roster.length === 0) {
+        const fallback = document.createElement('option');
+        fallback.value = '';
+        fallback.textContent = 'No players available';
+        select.appendChild(fallback);
+        return;
+    }
+
+    roster.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
+
+    select.selectedIndex = 0;
 }
 
 async function addPlayerToSheet() {
@@ -210,6 +238,123 @@ async function saveMatchToSheet() {
         alert('Match logs saved successfully to Firestore!');
     } catch (err) {
         alert('Save failed: ' + err);
+    }
+}
+
+async function loadPlayerDatabaseStats() {
+    const select = document.getElementById('player-stats-select');
+    const playerName = select ? select.value : '';
+    const resultsContainer = document.getElementById('player-stats-results');
+
+    if (!playerName) {
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="player-stat-card">
+                    <div class="player-card-header">
+                        <div>
+                            <span class="team-badge red-badge">PLAYER</span>
+                            <h3>No player selected</h3>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="stat-value">0</span><span class="stat-label">Games Played</span></div>
+                        <div class="stat-box"><span class="stat-value">0.00</span><span class="stat-label">Avg / Inning</span></div>
+                    </div>
+                </div>
+            `;
+        }
+        return;
+    }
+
+    if (!window.db || !window.firestoreTools) {
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="player-stat-card">
+                    <div class="player-card-header">
+                        <div>
+                            <span class="team-badge red-badge">PLAYER</span>
+                            <h3>${playerName}</h3>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="stat-value">N/A</span><span class="stat-label">Games Played</span></div>
+                        <div class="stat-box"><span class="stat-value">N/A</span><span class="stat-label">Avg / Inning</span></div>
+                    </div>
+                </div>
+            `;
+        }
+        return;
+    }
+
+    try {
+        const { collection, getDocs } = window.firestoreTools;
+        const snapshot = await getDocs(collection(window.db, 'game_logs'));
+
+        const playerLogs = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data && data.playerName === playerName) {
+                playerLogs.push(data);
+            }
+        });
+
+        const gamesPlayed = new Set(playerLogs
+            .map(log => log.gameNumber)
+            .filter(gameNumber => gameNumber !== undefined && gameNumber !== null && gameNumber !== ''))
+            .size;
+
+        const totalInnings = playerLogs.length;
+        const totalPoints = playerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
+        const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
+
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="player-stat-card">
+                    <div class="player-card-header">
+                        <div>
+                            <span class="team-badge red-badge">PLAYER</span>
+                            <h3>${playerName}</h3>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-value">${gamesPlayed}</span>
+                            <span class="stat-label">Games Played</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">${avgPerInning}</span>
+                            <span class="stat-label">Avg / Inning</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">${totalInnings}</span>
+                            <span class="stat-label">Total Innings</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">${totalPoints}</span>
+                            <span class="stat-label">Total Points</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Failed to load player stats:', err);
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="player-stat-card">
+                    <div class="player-card-header">
+                        <div>
+                            <span class="team-badge red-badge">PLAYER</span>
+                            <h3>${playerName}</h3>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="stat-value">N/A</span><span class="stat-label">Games Played</span></div>
+                        <div class="stat-box"><span class="stat-value">N/A</span><span class="stat-label">Avg / Inning</span></div>
+                    </div>
+                </div>
+            `;
+        }
     }
 }
 
