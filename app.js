@@ -685,7 +685,7 @@ async function loadPlayerDatabaseStats() {
         let filteredPlayerLogs = playerLogs;
         if (statsSideFilter !== 'all') {
             filteredPlayerLogs = playerLogs.filter(log => {
-                const logSide = log.side || '';
+                const logSide = log.boardSide || '';
                 return logSide.toLowerCase() === statsSideFilter.toLowerCase();
             });
         }
