@@ -241,7 +241,7 @@ async function saveMatchToSheet() {
     }
 }
 
-function renderPlayerTrendChart(pointsByGame) {
+function renderPlayerTrendChart(gameSeries) {
     const canvas = document.getElementById('player-trend-chart');
     if (!canvas) return;
 
@@ -260,7 +260,52 @@ function renderPlayerTrendChart(pointsByGame) {
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
 
-    if (!pointsByGame || pointsByGame.length === 0) {
+    const tooltip = document.getElementById('player-chart-tooltip') || (() => {
+        const el = document.createElement('div');
+        el.id = 'player-chart-tooltip';
+        el.className = 'chart-tooltip';
+        document.body.appendChild(el);
+        return el;
+    })();
+
+    canvas.onmousemove = (event) => {
+        if (!gameSeries || gameSeries.length === 0) {
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        const maxValue = Math.max(...gameSeries.map(item => item.avgPerInning), 1);
+
+        let activePoint = null;
+        gameSeries.forEach((entry, index) => {
+            const x = padding.left + (index / Math.max(gameSeries.length - 1, 1)) * plotWidth;
+            const y = height - padding.bottom - ((entry.avgPerInning - 0) / (maxValue || 1)) * plotHeight;
+            if (Math.abs(mouseX - x) <= 8 && Math.abs(mouseY - y) <= 8) {
+                activePoint = { ...entry, x, y };
+            }
+        });
+
+        if (!activePoint) {
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        tooltip.innerHTML = `
+            <strong>Game ${activePoint.gameNumber}</strong><br>
+            Avg / inning: ${activePoint.avgPerInning.toFixed(2)}<br>
+            Net vs opp: ${activePoint.net >= 0 ? '+' : ''}${activePoint.net.toFixed(0)}
+        `;
+        tooltip.style.left = `${event.clientX + 14}px`;
+        tooltip.style.top = `${event.clientY + 14}px`;
+        tooltip.style.display = 'block';
+    };
+
+    canvas.onmouseleave = () => tooltip.style.display = 'none';
+
+    if (!gameSeries || gameSeries.length === 0) {
         ctx.fillStyle = '#94a3b8';
         ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
@@ -268,7 +313,7 @@ function renderPlayerTrendChart(pointsByGame) {
         return;
     }
 
-    const maxValue = Math.max(...pointsByGame, 1);
+    const maxValue = Math.max(...gameSeries.map(item => item.avgPerInning), 1);
     const minValue = 0;
 
     ctx.strokeStyle = '#334155';
@@ -292,7 +337,7 @@ function renderPlayerTrendChart(pointsByGame) {
         ctx.fillStyle = '#94a3b8';
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(value.toFixed(0), padding.left - 8, y + 4);
+        ctx.fillText(value.toFixed(1), padding.left - 8, y + 4);
     }
 
     ctx.beginPath();
@@ -300,10 +345,10 @@ function renderPlayerTrendChart(pointsByGame) {
     ctx.lineTo(width - padding.right, height - padding.bottom);
     ctx.stroke();
 
-    const points = pointsByGame.map((value, index) => {
-        const x = padding.left + (index / Math.max(pointsByGame.length - 1, 1)) * plotWidth;
-        const y = height - padding.bottom - ((value - minValue) / (maxValue - minValue || 1)) * plotHeight;
-        return { x, y, value };
+    const points = gameSeries.map((entry, index) => {
+        const x = padding.left + (index / Math.max(gameSeries.length - 1, 1)) * plotWidth;
+        const y = height - padding.bottom - ((entry.avgPerInning - minValue) / (maxValue - minValue || 1)) * plotHeight;
+        return { ...entry, x, y };
     });
 
     ctx.strokeStyle = '#38bdf8';
@@ -325,13 +370,122 @@ function renderPlayerTrendChart(pointsByGame) {
     ctx.fillStyle = '#94a3b8';
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'center';
-    const startIndex = Math.max(0, pointsByGame.length - 10);
-    points.forEach((point, index) => {
-        if (index >= startIndex) {
-            const label = `G${index + 1}`;
-            ctx.fillText(label, point.x, height - 8);
-        }
+    points.forEach(point => {
+        ctx.fillText(`G${point.gameNumber}`, point.x, height - 8);
     });
+}
+
+function renderPlayerScoreHistogram(distribution) {
+    const canvas = document.getElementById('player-score-histogram');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const width = canvas.clientWidth || 600;
+    const height = 220;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = { top: 20, right: 20, bottom: 30, left: 38 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    const tooltip = document.getElementById('player-histogram-tooltip') || (() => {
+        const el = document.createElement('div');
+        el.id = 'player-histogram-tooltip';
+        el.className = 'chart-tooltip';
+        document.body.appendChild(el);
+        return el;
+    })();
+
+    canvas.onmouseleave = () => tooltip.style.display = 'none';
+
+    if (!distribution || distribution.length === 0) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No score distribution available', width / 2, height / 2);
+        return;
+    }
+
+    const maxCount = Math.max(...distribution.map(item => item.count), 1);
+    const minScore = Math.min(...distribution.map(item => item.score), 0);
+    const maxScore = Math.max(...distribution.map(item => item.score), 0);
+    const bucketCount = distribution.length;
+    const barWidth = plotWidth / Math.max(bucketCount, 1) * 0.72;
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, padding.top);
+    ctx.lineTo(padding.left, height - padding.bottom);
+    ctx.lineTo(width - padding.right, height - padding.bottom);
+    ctx.stroke();
+
+    for (let i = 0; i <= 4; i++) {
+        const value = (maxCount / 4) * i;
+        const y = height - padding.bottom - ((value / maxCount) * plotHeight);
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(value).toString(), padding.left - 8, y + 4);
+    }
+
+    distribution.forEach((bucket, index) => {
+        const x = padding.left + (index / Math.max(bucketCount, 1)) * plotWidth + 10;
+        const barHeight = (bucket.count / maxCount) * plotHeight;
+        const y = height - padding.bottom - barHeight;
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(x, y, Math.max(barWidth, 8), barHeight);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(bucket.score), x + Math.max(barWidth, 8) / 2, height - 10);
+
+        const hitArea = {
+            x,
+            y,
+            width: Math.max(barWidth, 8),
+            height: barHeight,
+            bucket
+        };
+
+        canvas.onmousemove = (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            const inside = mouseX >= hitArea.x && mouseX <= hitArea.x + hitArea.width && mouseY >= hitArea.y && mouseY <= hitArea.y + hitArea.height;
+
+            if (!inside) {
+                tooltip.style.display = 'none';
+                return;
+            }
+
+            tooltip.innerHTML = `<strong>Score ${hitArea.bucket.score}</strong><br>Turns: ${hitArea.bucket.count}`;
+            tooltip.style.left = `${event.clientX + 14}px`;
+            tooltip.style.top = `${event.clientY + 14}px`;
+            tooltip.style.display = 'block';
+        };
+    });
+
+    if (distribution.length > 0) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Points', width / 2, height - 2);
+    }
 }
 
 async function loadPlayerDatabaseStats() {
@@ -378,6 +532,7 @@ async function loadPlayerDatabaseStats() {
             `;
         }
         renderPlayerTrendChart([]);
+        renderPlayerScoreHistogram([]);
         return;
     }
 
@@ -393,30 +548,74 @@ async function loadPlayerDatabaseStats() {
             }
         });
 
-        const gameTotals = {};
+        const playerGameMap = {};
         playerLogs.forEach(log => {
             const gameNumber = Number(log.gameNumber || 0);
             if (!gameNumber) return;
-            gameTotals[gameNumber] = (gameTotals[gameNumber] || 0) + Number(log.inningScore || 0);
+
+            if (!playerGameMap[gameNumber]) {
+                playerGameMap[gameNumber] = {
+                    team: log.team,
+                    totalPoints: 0,
+                    innings: 0
+                };
+            }
+
+            playerGameMap[gameNumber].totalPoints += Number(log.inningScore || 0);
+            playerGameMap[gameNumber].innings += 1;
         });
 
-        const sortedGames = Object.entries(gameTotals)
-            .map(([gameNumber, total]) => ({ gameNumber: Number(gameNumber), total }))
+        const matchSnapshot = await getDocs(collection(window.db, 'matches'));
+        const scoreByGame = {};
+        matchSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (!data || data.gameNumber === undefined || data.gameNumber === null) return;
+            const gameNumber = Number(data.gameNumber);
+            if (!gameNumber) return;
+            scoreByGame[gameNumber] = {
+                redScore: Number(data.redScore || 0),
+                blueScore: Number(data.blueScore || 0)
+            };
+        });
+
+        const sortedGames = Object.entries(playerGameMap)
+            .map(([gameNumber, stats]) => {
+                const number = Number(gameNumber);
+                const score = scoreByGame[number] || { redScore: 0, blueScore: 0 };
+                let net = 0;
+
+                if (stats.team === 'Red') {
+                    net = score.redScore - score.blueScore;
+                } else if (stats.team === 'Blue') {
+                    net = score.blueScore - score.redScore;
+                }
+
+                return {
+                    gameNumber: number,
+                    avgPerInning: stats.innings > 0 ? Number((stats.totalPoints / stats.innings).toFixed(2)) : 0,
+                    net: Number(net)
+                };
+            })
             .sort((a, b) => a.gameNumber - b.gameNumber)
             .slice(-10);
 
-        let runningTotal = 0;
-        const runningAverages = sortedGames.map((game, index) => {
-            runningTotal += game.total;
-            return Number((runningTotal / (index + 1)).toFixed(2));
+        const scoreDistribution = {};
+        playerLogs.forEach(log => {
+            const score = Number(log.inningScore || 0);
+            scoreDistribution[score] = (scoreDistribution[score] || 0) + 1;
         });
+
+        const histogramData = Object.entries(scoreDistribution)
+            .map(([score, count]) => ({ score: Number(score), count }))
+            .sort((a, b) => a.score - b.score);
 
         const gamesPlayed = sortedGames.length;
         const totalInnings = playerLogs.length;
         const totalPoints = playerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
         const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
 
-        renderPlayerTrendChart(runningAverages);
+        renderPlayerTrendChart(sortedGames);
+        renderPlayerScoreHistogram(histogramData);
 
         if (resultsContainer) {
             resultsContainer.innerHTML = `
@@ -451,6 +650,7 @@ async function loadPlayerDatabaseStats() {
     } catch (err) {
         console.error('Failed to load player stats:', err);
         renderPlayerTrendChart([]);
+        renderPlayerScoreHistogram([]);
         if (resultsContainer) {
             resultsContainer.innerHTML = `
                 <div class="player-stat-card">
