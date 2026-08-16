@@ -831,10 +831,10 @@ async function loadPlayerDatabaseStats() {
         const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
         
         // Calculate hole, board, and miss stats
-        const totalHoles = filteredPlayerLogs.filter(log => log.hole).length;
-        const totalBoards = filteredPlayerLogs.filter(log => log.board).length;
-        const totalMisses = filteredPlayerLogs.filter(log => log.missed).length;
-        const totalThrows = filteredPlayerLogs.length;
+        const totalHoles = filteredPlayerLogs.filter(log => sum(log.hole));
+        const totalBoards = filteredPlayerLogs.filter(log => sum(log.board));
+        const totalMisses = filteredPlayerLogs.filter(log => sum(log.missed));
+        const totalThrows = totalHoles + totalBoards + totalMisses;
         
         const holePercent = totalThrows > 0 ? ((totalHoles / totalThrows) * 100).toFixed(1) : '0.0';
         const boardPercent = totalThrows > 0 ? ((totalBoards / totalThrows) * 100).toFixed(1) : '0.0';
@@ -914,32 +914,32 @@ async function loadPlayerDatabaseStats() {
                             <span class="stat-label">Games Played</span>
                         </div>
                         <div class="stat-box">
-                            <span class="stat-value">${avgPerInning}</span>
-                            <span class="stat-label">Avg / Inning</span>
-                        </div>
-                        <div class="stat-box">
                             <span class="stat-value">${winLossRecord}</span>
                             <span class="stat-label">Win Loss Record</span>
                         </div>
                         <div class="stat-box">
+                            <span class="stat-value">${avgPerInning}</span>
+                            <span class="stat-label">Avg / Inning</span>
+                        </div>
+                        <div class="stat-box">
                             <span class="stat-value">${overallNet >= 0 ? '+' : ''}${overallNet}</span>
-                            <span class="stat-label">Overall Net</span>
+                            <span class="stat-label">Overall +/-</span>
                         </div>
                         <div class="stat-box">
                             <span class="stat-value">${totalHoles} (${holePercent}%)</span>
-                            <span class="stat-label">Total Hole</span>
+                            <span class="stat-label">Hole</span>
                         </div>
                         <div class="stat-box">
                             <span class="stat-value">${totalBoards} (${boardPercent}%)</span>
-                            <span class="stat-label">Total Board</span>
+                            <span class="stat-label">Board</span>
                         </div>
                         <div class="stat-box">
                             <span class="stat-value">${totalMisses} (${missPercent}%)</span>
-                            <span class="stat-label">Total Miss</span>
+                            <span class="stat-label">Miss</span>
                         </div>
                         <div class="stat-box">
                             <span class="stat-value">${totalPoints} / ${totalPossiblePoints}</span>
-                            <span class="stat-label">Total/Possible Points</span>
+                            <span class="stat-label">Total/Poss Points</span>
                         </div>
                     </div>
                 </div>
