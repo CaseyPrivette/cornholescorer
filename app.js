@@ -624,6 +624,7 @@ async function loadPlayerDatabaseStats() {
     const select = document.getElementById('player-stats-select');
     const playerName = select ? select.value : '';
     const resultsContainer = document.getElementById('player-stats-results');
+    const statsSideFilter = document.querySelector('input[name="stats-side-filter"]:checked')?.value || 'all';
 
     if (!playerName) {
         if (resultsContainer) {
@@ -680,6 +681,15 @@ async function loadPlayerDatabaseStats() {
             }
         });
 
+        // Filter player logs by board side if not "all"
+        let filteredPlayerLogs = playerLogs;
+        if (statsSideFilter !== 'all') {
+            filteredPlayerLogs = playerLogs.filter(log => {
+                const logSide = log.side || '';
+                return logSide.toLowerCase() === statsSideFilter.toLowerCase();
+            });
+        }
+
         const allGameLogs = [];
         snapshot.forEach(doc => {
             const data = doc.data();
@@ -708,7 +718,7 @@ async function loadPlayerDatabaseStats() {
         });
 
         const playerGameMap = {};
-        playerLogs.forEach(log => {
+        filteredPlayerLogs.forEach(log => {
             const gameNumber = Number(log.gameNumber || 0);
             if (!gameNumber) return;
 
@@ -781,7 +791,7 @@ async function loadPlayerDatabaseStats() {
 
         const recentGameNumbers = Array.from(
             new Set(
-                playerLogs
+                filteredPlayerLogs
                     .map(log => Number(log.gameNumber || 0))
                     .filter(Boolean)
                     .sort((a, b) => a - b)
@@ -791,7 +801,7 @@ async function loadPlayerDatabaseStats() {
         const recentGameSet = new Set(recentGameNumbers);
 
         const scoreDistribution = {};
-        playerLogs.forEach(log => {
+        filteredPlayerLogs.forEach(log => {
             const score = Number(log.inningScore || 0);
             const gameNumber = Number(log.gameNumber || 0);
             if (!scoreDistribution[score]) {
@@ -814,11 +824,11 @@ async function loadPlayerDatabaseStats() {
             .sort((a, b) => a.score - b.score);
 
         const gamesPlayed = sortedGames.length;
-        const totalInnings = playerLogs.length;
+        const totalInnings = filteredPlayerLogs.length;
         const totalPossiblePoints = totalInnings * 12;
-        const totalPoints = playerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
+        const totalPoints = filteredPlayerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
         const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
-        const overallNet = playerLogs.reduce((sum, log) => {
+        const overallNet = filteredPlayerLogs.reduce((sum, log) => {
             const inningNumber = Number(log.inningNumber || log.inning || 0);
             const gameNumber = Number(log.gameNumber || 0);
             const matchLog = allGameLogs.find(entry => {
@@ -831,7 +841,7 @@ async function loadPlayerDatabaseStats() {
         }, 0);
 
         const opponentNetMap = {};
-        playerLogs.forEach(log => {
+        filteredPlayerLogs.forEach(log => {
             const inningNumber = Number(log.inningNumber || log.inning || 0);
             const gameNumber = Number(log.gameNumber || 0);
             const relevantOpponents = allGameLogs.filter(entry => {
