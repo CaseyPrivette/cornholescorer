@@ -241,6 +241,99 @@ async function saveMatchToSheet() {
     }
 }
 
+function renderPlayerTrendChart(pointsByGame) {
+    const canvas = document.getElementById('player-trend-chart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const width = canvas.clientWidth || 600;
+    const height = 220;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = { top: 20, right: 20, bottom: 28, left: 38 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    if (!pointsByGame || pointsByGame.length === 0) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No game data available', width / 2, height / 2);
+        return;
+    }
+
+    const maxValue = Math.max(...pointsByGame, 1);
+    const minValue = 0;
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, padding.top);
+    ctx.lineTo(padding.left, height - padding.bottom);
+    ctx.lineTo(width - padding.right, height - padding.bottom);
+    ctx.stroke();
+
+    for (let i = 0; i <= 4; i++) {
+        const value = minValue + ((maxValue - minValue) / 4) * i;
+        const y = height - padding.bottom - ((value - minValue) / (maxValue - minValue || 1)) * plotHeight;
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(value.toFixed(0), padding.left - 8, y + 4);
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(padding.left, height - padding.bottom);
+    ctx.lineTo(width - padding.right, height - padding.bottom);
+    ctx.stroke();
+
+    const points = pointsByGame.map((value, index) => {
+        const x = padding.left + (index / Math.max(pointsByGame.length - 1, 1)) * plotWidth;
+        const y = height - padding.bottom - ((value - minValue) / (maxValue - minValue || 1)) * plotHeight;
+        return { x, y, value };
+    });
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+    });
+    ctx.stroke();
+
+    points.forEach(point => {
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    const startIndex = Math.max(0, pointsByGame.length - 10);
+    points.forEach((point, index) => {
+        if (index >= startIndex) {
+            const label = `G${index + 1}`;
+            ctx.fillText(label, point.x, height - 8);
+        }
+    });
+}
+
 async function loadPlayerDatabaseStats() {
     const select = document.getElementById('player-stats-select');
     const playerName = select ? select.value : '';
@@ -263,6 +356,7 @@ async function loadPlayerDatabaseStats() {
                 </div>
             `;
         }
+        renderPlayerTrendChart([]);
         return;
     }
 
@@ -283,6 +377,7 @@ async function loadPlayerDatabaseStats() {
                 </div>
             `;
         }
+        renderPlayerTrendChart([]);
         return;
     }
 
@@ -298,14 +393,30 @@ async function loadPlayerDatabaseStats() {
             }
         });
 
-        const gamesPlayed = new Set(playerLogs
-            .map(log => log.gameNumber)
-            .filter(gameNumber => gameNumber !== undefined && gameNumber !== null && gameNumber !== ''))
-            .size;
+        const gameTotals = {};
+        playerLogs.forEach(log => {
+            const gameNumber = Number(log.gameNumber || 0);
+            if (!gameNumber) return;
+            gameTotals[gameNumber] = (gameTotals[gameNumber] || 0) + Number(log.inningScore || 0);
+        });
 
+        const sortedGames = Object.entries(gameTotals)
+            .map(([gameNumber, total]) => ({ gameNumber: Number(gameNumber), total }))
+            .sort((a, b) => a.gameNumber - b.gameNumber)
+            .slice(-10);
+
+        let runningTotal = 0;
+        const runningAverages = sortedGames.map((game, index) => {
+            runningTotal += game.total;
+            return Number((runningTotal / (index + 1)).toFixed(2));
+        });
+
+        const gamesPlayed = sortedGames.length;
         const totalInnings = playerLogs.length;
         const totalPoints = playerLogs.reduce((sum, log) => sum + Number(log.inningScore || 0), 0);
         const avgPerInning = totalInnings > 0 ? (totalPoints / totalInnings).toFixed(2) : '0.00';
+
+        renderPlayerTrendChart(runningAverages);
 
         if (resultsContainer) {
             resultsContainer.innerHTML = `
@@ -339,6 +450,7 @@ async function loadPlayerDatabaseStats() {
         }
     } catch (err) {
         console.error('Failed to load player stats:', err);
+        renderPlayerTrendChart([]);
         if (resultsContainer) {
             resultsContainer.innerHTML = `
                 <div class="player-stat-card">
