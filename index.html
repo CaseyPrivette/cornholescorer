@@ -190,11 +190,11 @@
 
                 <div id="player-stats-summary-panel" class="player-stats-panel active">
                     <div class="stats-filter-row">
-                        <span class="stats-filter-label">View:</span>
+                        <span class="stats-filter-label">Board Side:</span>
                         <div class="side-radio-group" role="radiogroup" aria-label="Stats filter by board side">
                             <label class="side-radio-option">
                                 <input type="radio" name="stats-side-filter" value="all" checked onchange="loadPlayerDatabaseStats()">
-                                <span>Overall</span>
+                                <span>Combined</span>
                             </label>
                             <label class="side-radio-option">
                                 <input type="radio" name="stats-side-filter" value="right" onchange="loadPlayerDatabaseStats()">
@@ -267,9 +267,9 @@
                                 <tr>
                                     <th>Game #</th>
                                     <th>Board Side</th>
+                                    <th>Partner</th>
                                     <th>Opponent</th>
-                                    <th>Red Team Score</th>
-                                    <th>Blue Team Score</th>
+                                    <th>Result</th>
                                 </tr>
                             </thead>
                             <tbody id="player-game-history-body">

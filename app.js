@@ -1019,7 +1019,7 @@ async function loadPlayerDatabaseStats() {
 }
 
 // ============================================================================
-// THROW INPUT BUTTON BUILDER
+// PLAYER GAME HISTORY TABLE
 // ============================================================================
 
 function renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLogs, statsSideFilter = 'all') {
@@ -1049,6 +1049,11 @@ function renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLog
             const gameSide = playerLogsForGame[0].boardSide || playerLogsForGame[0].side || (statsSideFilter !== 'all' ? statsSideFilter : 'Unknown');
             const playerTeam = playerLogsForGame[0].team || 'Unknown';
             const opposingTeam = playerTeam === 'Red' ? 'Blue' : 'Red';
+            const partnerNames = [...new Set(
+                gameLogs
+                    .filter(entry => entry.team === playerTeam && entry.playerName !== playerName)
+                    .map(entry => entry.playerName || 'Unknown')
+            )];
             const opponentNames = [...new Set(
                 gameLogs
                     .filter(entry => entry.team === opposingTeam && entry.playerName !== playerName)
@@ -1077,12 +1082,19 @@ function renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLog
                 }
             });
 
+            const playerScore = teamScores[playerTeam] ?? 0;
+            const opponentScore = teamScores[opposingTeam] ?? 0;
+            const isWin = playerScore > opponentScore;
+            const resultText = `${playerScore}-${opponentScore}`;
+
             return {
                 gameNumber: Number(gameNumber),
                 side: gameSide,
+                partner: partnerNames.length ? partnerNames.join(', ') : 'Unknown',
                 opponent: opponentNames.length ? opponentNames.join(', ') : 'Unknown',
-                redScore: teamScores.Red || 0,
-                blueScore: teamScores.Blue || 0
+                resultText,
+                resultClass: isWin ? 'win' : 'loss',
+                resultLabel: isWin ? 'W' : 'L'
             };
         })
         .filter(Boolean);
@@ -1096,12 +1108,16 @@ function renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLog
         <tr>
             <td>${row.gameNumber}</td>
             <td>${row.side}</td>
+            <td>${row.partner}</td>
             <td>${row.opponent}</td>
-            <td>${row.redScore}</td>
-            <td>${row.blueScore}</td>
+            <td class="history-result ${row.resultClass}">${row.resultText} ${row.resultLabel}</td>
         </tr>
     `).join('');
 }
+
+// ============================================================================
+// THROW INPUT BUTTON BUILDER
+// ============================================================================
 
 function buildInputButtonGroups() {
     createButtonGroup('red-board-boxes', 4, (val) => setThrowValue('redBoard', val));

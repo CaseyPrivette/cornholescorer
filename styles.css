@@ -343,6 +343,19 @@ canvas {
     font-weight: 700;
 }
 
+.history-result {
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.history-result.win {
+    color: #22c55e;
+}
+
+.history-result.loss {
+    color: #ef4444;
+}
+
 /* PLAYER STAT CARDS & METRIC HIGHLIGHTS */
 .stats-filter-row {
     display: flex;
