@@ -1,8 +1,14 @@
+// ============================================================================
+// APP BROWSER SETUP
+// ============================================================================
+
+// SET STATE FOR CHARTS ON PLAYER STATS TAB
 let playerChartState = {
     trend: [],
     histogram: []
 };
 
+// ALLOW FOR DYNAMIC SIZING OF PLAYER STATS CHARTS
 function resizePlayerCharts() {
     renderPlayerTrendChart(playerChartState.trend);
     renderPlayerScoreHistogram(playerChartState.histogram);
@@ -10,7 +16,7 @@ function resizePlayerCharts() {
 
 window.addEventListener('resize', resizePlayerCharts);
 
-// MATCH STATE
+// INITIALIZE MATCH STATE FOR ON DEVICE GAME TRACKING
 let gameState = {
     gameNumber: null,
     mode: '2v2',
@@ -35,7 +41,7 @@ let gameState = {
     editingHistoryIndex: null
 };
 
-// INITIALIZATION
+// INITIALIZATION OF EVENT LISTENERS IN BROWSER
 document.addEventListener('DOMContentLoaded', () => {
     buildInputButtonGroups();
     toggleGameMode();
@@ -43,7 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchRosterFromSheet();
 });
 
-// TAB SWITCHING
+// ============================================================================
+// TABS FOR HEADER AND SUBTABS
+// ============================================================================
+
+// MAIN HEADER TAB SWITCHING
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -54,6 +64,7 @@ function switchTab(tabId) {
     }
 }
 
+// SUB TABS ON PLAYER STATS PAGE
 function switchPlayerStatsTab(tabName) {
     document.querySelectorAll('.player-stats-panel').forEach(panel => {
         panel.classList.toggle('active', panel.id === `player-stats-${tabName}-panel`);
@@ -64,7 +75,10 @@ function switchPlayerStatsTab(tabName) {
     });
 }
 
-// SETUP TOGGLES
+// ============================================================================
+// SETUP TOGGLES FOR GAME SETUP TAB
+// ============================================================================
+
 function toggleGameMode() {
     const mode = document.getElementById('game-mode').value;
     gameState.mode = mode;
@@ -106,7 +120,7 @@ function toggleGameMode() {
 }
 
 // ============================================================================
-// GOOGLE SHEETS API INTEGRATION (ROSTER & LOGGING)
+// FIREBASE API INTEGRATION (ROSTER & LOGGING)
 // ============================================================================
 
 async function fetchRosterFromSheet() {
@@ -147,7 +161,7 @@ async function fetchRosterFromSheet() {
     }
 }
 
-// Fixed: Default parameter if playerList is missing
+// PULL ROSTERS FROM FIREBASE AND POPULATE PLAYER DROPDOWN
 function populateRosterDropdowns(playerList = gameState.roster) {
     const selectIds = ['blue-player-1', 'red-player-1', 'red-player-2', 'blue-player-2'];
     
@@ -198,6 +212,7 @@ function populatePlayerLookupDropdown() {
     select.selectedIndex = 0;
 }
 
+// ADD NEW PLAYERS TO ROSTER IN FIREBASE
 async function addPlayerToSheet() {
     const input = document.getElementById('new-player-name');
     const name = input ? input.value.trim() : '';
@@ -218,6 +233,11 @@ async function addPlayerToSheet() {
         alert('Failed to add player: ' + err);
     }
 }
+
+// ============================================================================
+// BUTTON TO SAVE GAME TO FIREBASE WITHOUT A WINNER DECLARED (MOSTLY FOR PRACTICE)
+// ALSO USED IN POPUP ONCE A GAME WINNER HAS BEEN DECLARED
+// ============================================================================
 
 async function saveMatchToSheet() {
     if (gameState.detailedPlayerLogs.length === 0) {
@@ -262,6 +282,10 @@ async function saveMatchToSheet() {
         alert('Save failed: ' + err);
     }
 }
+
+// ============================================================================
+// PLAYER VS. PLAYER SUMMARY TABLE FOR PLAYER STATS TAB
+// ============================================================================
 
 let playerOpponentNetTableState = {
     rows: [],
@@ -343,6 +367,8 @@ function renderPlayerOpponentNetTable(rows, sortKey = 'netScore', sortDirection 
     attachOpponentNetTableSortHandlers();
 }
 
+// CALCULATION OF NET SCORE PER INNING TO POPULATE PALYER VS PLAYER NET SCORES
+
 function attachOpponentNetTableSortHandlers() {
     const container = document.getElementById('player-opponent-net-table');
     if (!container) return;
@@ -358,6 +384,11 @@ function attachOpponentNetTableSortHandlers() {
         };
     });
 }
+
+// ============================================================================
+// LAST 10 GAMES TREND CHART FOR PLAYER STATS TAB
+// INCLUDES TOOLTIP WITH GAME SPECIFIC DATA ON HOVER
+// ============================================================================
 
 function renderPlayerTrendChart(gameSeries) {
     playerChartState.trend = gameSeries || [];
@@ -500,6 +531,12 @@ function renderPlayerTrendChart(gameSeries) {
     });
 }
 
+// ============================================================================
+// HISTOGRAM OF PLAYER SCORES FOR PLAYER STATS TAB
+// INCLUDES HIGHLIGHTING OF LAST 10 TURNS
+// ON HOVER SHOWS TOOLTIP WITH COLUMN SPECIFIC DETAILS
+// ============================================================================
+
 function renderPlayerScoreHistogram(distribution) {
     playerChartState.histogram = distribution || [];
 
@@ -629,6 +666,10 @@ function renderPlayerScoreHistogram(distribution) {
     ctx.textAlign = 'center';
     ctx.fillText('Points', width / 2, height - 2);
 }
+
+// ============================================================================
+// STAT CARDS FOR PLAYER STATS TAB
+// ============================================================================
 
 async function loadPlayerDatabaseStats() {
     const select = document.getElementById('player-stats-select');
@@ -1019,7 +1060,7 @@ async function loadPlayerDatabaseStats() {
 }
 
 // ============================================================================
-// PLAYER GAME HISTORY TABLE
+// PLAYER GAME HISTORY TABLE FOR PLAYER STATS TAB
 // ============================================================================
 
 function renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLogs, statsSideFilter = 'all') {
@@ -1145,6 +1186,7 @@ function createButtonGroup(containerId, maxBags, onClickCallback) {
     }
 }
 
+// DYNAMICALLY UPDATES BUTTONS TO ALLOW A MAXIUM OF 4 BAGS SCORED PER TURN
 function setThrowValue(key, val) {
     gameState.currentInputs[key] = val;
 
@@ -1329,6 +1371,9 @@ function getNextInningNumber() {
     return Math.max(...gameState.history.map(row => Number(row.inning || 0))) + 1;
 }
 
+
+// UPDATE THE GAME STATE WITH THE LATEST SUBMITTED INNING
+
 function recalculateMatchFromHistory() {
     gameState.redScore = 0;
     gameState.blueScore = 0;
@@ -1436,6 +1481,9 @@ function recalculateMatchFromHistory() {
 
     gameState.currentInning = getNextInningNumber();
 }
+
+
+// ABILITY TO EDIT PREVIOUSLY SUBMITTED INNINGS
 
 function beginEditInning(historyIndex) {
     const entry = gameState.history[historyIndex];
@@ -1612,7 +1660,7 @@ function submitInning() {
     checkMatchCompletion();
 }
 
-// Check score threshold and launch game end prompt
+// CHECK GAME STATE FOR A SCORE THAT PASSES 21 TO DECLARE WINNER AND PRESENT GAME SUBMISSION POPUP
 function checkMatchCompletion() {
     const WINNING_SCORE = 21;
     let winnerText = '';
@@ -1705,6 +1753,10 @@ function renderLogTable() {
         tbody.appendChild(tr);
     });
 }
+
+// ============================================================================
+// CURRENT GAME STATS TAB AND DATA
+// ============================================================================
 
 function renderStatsTab() {
     const container = document.getElementById('stats-container');
@@ -1904,7 +1956,8 @@ function renderStatsTab() {
     });
 }
 
-// Helper to sum differential (+/-) for matched pitchers
+// HELPER TO SUM PLAYERS CURRENT +/- IN CURRENT GAME
+
 function calculatePlayerNetScores() {
     const nets = { red1: 0, red2: 0, blue1: 0, blue2: 0 };
     if (gameState.mode === 'practice') return nets;
