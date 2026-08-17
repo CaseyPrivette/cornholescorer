@@ -851,35 +851,38 @@ async function loadPlayerDatabaseStats() {
         const boardPercent = totalThrows > 0 ? ((totalBoards / totalThrows) * 100).toFixed(1) : '0.0';
         const missPercent = totalThrows > 0 ? ((totalMisses / totalThrows) * 100).toFixed(1) : '0.0';
         
-        // Calculate win/loss record based on each team's net score per inning.
-        // A team only adds to its total when that inning's net score is positive.
+        // Calculate win/loss record based on each team's positive inning net totals.
+        // This matches the actual match logic: a team only adds points when its inning net is positive.
         const relevantGameNumbers = [...new Set(
             filteredPlayerLogs
                 .map(log => Number(log.gameNumber || 0))
                 .filter(Boolean)
         )];
 
-        const getTeamNetTotalForGame = (gameLogs, teamName) => {
-            const inningsMap = {};
+        const getGameTeamTotals = (gameLogs) => {
+            const inningMap = {};
             gameLogs.forEach(log => {
                 const inningNumber = Number(log.inningNumber || log.inning || 0);
                 if (!inningNumber) return;
-                if (!inningsMap[inningNumber]) {
-                    inningsMap[inningNumber] = { Red: 0, Blue: 0 };
+                if (!inningMap[inningNumber]) {
+                    inningMap[inningNumber] = { Red: 0, Blue: 0 };
                 }
-                inningsMap[inningNumber][log.team] = Number(log.inningScore || 0);
+                inningMap[inningNumber][log.team] = (inningMap[inningNumber][log.team] || 0) + Number(log.inningScore || 0);
             });
 
-            let total = 0;
-            Object.values(inningsMap).forEach(inningScores => {
-                const teamScore = Number(inningScores[teamName] || 0);
-                const opponentTeam = teamName === 'Red' ? 'Blue' : 'Red';
-                const opponentScore = Number(inningScores[opponentTeam] || 0);
-                const net = teamScore - opponentScore;
-                if (net > 0) total += net;
+            const totals = { Red: 0, Blue: 0 };
+            Object.values(inningMap).forEach(inningScores => {
+                const redGross = Number(inningScores.Red || 0);
+                const blueGross = Number(inningScores.Blue || 0);
+
+                if (redGross > blueGross) {
+                    totals.Red += redGross - blueGross;
+                } else if (blueGross > redGross) {
+                    totals.Blue += blueGross - redGross;
+                }
             });
 
-            return total;
+            return totals;
         };
 
         let wins = 0;
@@ -893,12 +896,12 @@ async function loadPlayerDatabaseStats() {
             const playerTeam = playerGameLog ? playerGameLog.team : null;
             if (!playerTeam) return;
 
-            const winnerNetScore = getTeamNetTotalForGame(gameLogs, playerTeam);
+            const teamTotals = getGameTeamTotals(gameLogs);
             const maxInning = Math.max(...gameLogs.map(log => Number(log.inningNumber || log.inning || 0)), 0);
-            const gameIsComplete = winnerNetScore >= 21 || maxInning >= 4;
+            const gameIsComplete = teamTotals.Red >= 21 || teamTotals.Blue >= 21 || maxInning >= 4;
             if (!gameIsComplete) return;
 
-            if (winnerNetScore >= 21) {
+            if ((teamTotals[playerTeam] || 0) >= 21) {
                 wins++;
             } else {
                 losses++;
@@ -1052,22 +1055,26 @@ function renderPlayerGameHistoryTable(playerName, filteredPlayerLogs, allGameLog
                     .map(entry => entry.playerName || 'Unknown')
             )];
 
-            const inningNetMap = {};
+            const inningMap = {};
             gameLogs.forEach(entry => {
                 const inningNumber = Number(entry.inningNumber || entry.inning || 0);
                 if (!inningNumber) return;
-                if (!inningNetMap[inningNumber]) {
-                    inningNetMap[inningNumber] = { Red: 0, Blue: 0 };
+                if (!inningMap[inningNumber]) {
+                    inningMap[inningNumber] = { Red: 0, Blue: 0 };
                 }
-                inningNetMap[inningNumber][entry.team] = Number(entry.inningScore || 0);
+                inningMap[inningNumber][entry.team] = (inningMap[inningNumber][entry.team] || 0) + Number(entry.inningScore || 0);
             });
 
             const teamScores = { Red: 0, Blue: 0 };
-            Object.values(inningNetMap).forEach(inningScores => {
-                const redNet = (Number(inningScores.Red || 0) - Number(inningScores.Blue || 0));
-                const blueNet = (Number(inningScores.Blue || 0) - Number(inningScores.Red || 0));
-                if (redNet > 0) teamScores.Red += redNet;
-                if (blueNet > 0) teamScores.Blue += blueNet;
+            Object.values(inningMap).forEach(inningScores => {
+                const redGross = Number(inningScores.Red || 0);
+                const blueGross = Number(inningScores.Blue || 0);
+
+                if (redGross > blueGross) {
+                    teamScores.Red += redGross - blueGross;
+                } else if (blueGross > redGross) {
+                    teamScores.Blue += blueGross - redGross;
+                }
             });
 
             return {
